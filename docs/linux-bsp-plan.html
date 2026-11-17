@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linux BSP · 24 周全职冲刺 · 168 天 · 三条腿</title>
+<style>
+  :root{
+    --ink:#16232b;--ink2:#48565f;--ink3:#7b8891;
+    --line:#dfe4e7;--line2:#eef1f3;
+    --paper:#fff;--bg:#f6f7f8;
+    --ac:#b04a2e;--ac-soft:#fbeee9;
+    --am:#a9702a;--am-soft:#faf2e6;
+    --rd:#a3352d;--rd-soft:#fbeeec;
+    --bl:#33508f;--bl-soft:#edf1fa;
+    --gr:#1f6f6b;--gr-soft:#e8f2f1;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 24px 110px}
+  header{padding:52px 0 24px;border-bottom:1px solid var(--line)}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);font-weight:500;margin:0 0 12px}
+  h1{font-size:31px;line-height:1.28;font-weight:600;margin:0 0 12px;letter-spacing:-.015em}
+  .lede{font-size:15px;color:var(--ink2);margin:0;max-width:68ch}
+  .lede b{font-weight:600;color:var(--ink)}
+  .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:24px 0 0}
+  .fact{background:var(--paper);padding:14px 16px}
+  .fact b{display:block;font-size:20px;font-weight:600;letter-spacing:-.01em}
+  .fact span{display:block;font-size:12px;color:var(--ink3);margin-top:2px}
+
+  h2.sec{font-size:18px;font-weight:600;margin:42px 0 6px;letter-spacing:-.005em}
+  p.sub{font-size:13px;color:var(--ink3);margin:0 0 15px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;
+    background:#f1f3f4;padding:1px 5px;border-radius:4px;color:#3d4a52}
+
+  .tbl{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .tbl table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .tbl th{font-size:11.5px;font-weight:500;color:var(--ink3);text-align:left;padding:9px 16px;
+    background:#fbfcfc;border-bottom:1px solid var(--line2);white-space:nowrap}
+  .tbl td{padding:10px 16px;border-top:1px solid var(--line2);vertical-align:top;color:var(--ink2)}
+  .tbl td:first-child{color:var(--ink);white-space:nowrap;font-weight:500}
+  .tbl b{color:var(--ink);font-weight:600}
+  .tbl td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .btag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:4px;background:var(--gr-soft);color:var(--gr);white-space:nowrap}
+  .btag.rk{background:var(--bl-soft);color:var(--bl)}
+  .btag.am{background:var(--am-soft);color:var(--am)}
+  .btag.rd{background:var(--rd-soft);color:var(--rd)}
+
+  .legs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .leg{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:15px 17px}
+  .leg .lh{font-size:11px;letter-spacing:.1em;font-weight:600;margin:0 0 5px}
+  .leg h4{font-size:14.5px;font-weight:600;margin:0 0 6px}
+  .leg p{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
+  .leg .num{font-size:12px;color:var(--ink3);border-top:1px dashed var(--line2);padding-top:7px}
+  .leg .num b{color:var(--ink);font-weight:600}
+  .l1{background:linear-gradient(180deg,#fbfcfc,#fff)}
+  .l1 .lh{color:var(--gr)} .l2 .lh{color:var(--bl)} .l3 .lh{color:var(--am)}
+
+  .exits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .exit{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px 17px}
+  .exit h4{font-size:14px;font-weight:600;margin:0 0 4px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .exit h4 em{font-style:normal;font-size:11.5px;color:var(--gr);background:var(--gr-soft);padding:1px 7px;border-radius:99px;white-space:nowrap}
+  .exit p{font-size:12.5px;color:var(--ink2);margin:0 0 6px}
+  .exit .kw{font-size:11.5px;color:var(--ink3)}
+  .exit .kw b{color:var(--ink2);font-weight:500}
+
+  .laws{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);counter-reset:law}
+  .law{display:flex;gap:14px;padding:12px 20px;border-top:1px solid var(--line2);font-size:14px}
+  .law:first-child{border-top:0}
+  .law::before{counter-increment:law;content:counter(law,decimal-leading-zero);
+    flex:0 0 26px;font-size:12px;color:var(--ac);font-weight:600;padding-top:2px;font-variant-numeric:tabular-nums}
+
+  .ledger{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .led{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:15px 18px}
+  .led h3{font-size:13px;font-weight:600;margin:0 0 9px;color:var(--ink2)}
+  .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4.5px 0;border-top:1px dashed var(--line2)}
+  .row:first-of-type{border-top:0}
+  .row .tm{color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tot{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:13px;font-weight:600}
+  .tot span{color:var(--ac)}
+
+  .fails{background:var(--rd-soft);border:1px solid #f2d6d3;border-radius:var(--r);padding:16px 20px}
+  .fail{display:flex;gap:12px;padding:7px 0;border-top:1px solid rgba(163,53,45,.12);font-size:13.5px}
+  .fail:first-child{border-top:0}
+  .fail .wk{flex:0 0 auto;background:#fff;border:1px solid #f2d6d3;color:var(--rd);
+    font-size:11.5px;padding:1px 8px;border-radius:99px;height:22px;line-height:19px;white-space:nowrap}
+  .fail b{font-weight:600;color:#7d2822}
+
+  .box{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:19px 21px;margin-top:14px}
+  .box h3{font-size:15px;font-weight:600;margin:0 0 8px}
+  .box p{font-size:13.5px;color:var(--ink2);margin:0 0 10px}
+  .box p:last-child{margin-bottom:0}
+  .box b{color:var(--ink);font-weight:600}
+  .warn{background:#fdf6ea;border:1px solid #eddcc0}
+  .warn h3{color:#7a5320}
+
+  .track{position:sticky;top:0;z-index:30;background:rgba(246,247,248,.95);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);margin-top:34px}
+  .track-in{max-width:1060px;margin:0 auto;padding:10px 24px;display:flex;flex-direction:column;gap:7px}
+  .bar-row{display:flex;align-items:center;gap:12px}
+  .bar{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .25s}
+  .cnt{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cnt b{color:var(--ink)}
+  .chips{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+  .chip{flex:0 0 auto;font:inherit;font-size:11.5px;padding:3px 9px;border-radius:99px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.12s}
+  .chip:hover{border-color:#b9c2c7}
+  .chip.done-w{background:var(--gr-soft);border-color:#bcd9d6;color:var(--gr)}
+  .chip.today{background:var(--ac);border-color:var(--ac);color:#fff}
+
+  .nowbar{display:none;background:var(--ac-soft);border:1px solid #eed3c8;border-radius:var(--r);
+    padding:13px 18px;margin-top:22px;font-size:13.5px;color:#7d3a22}
+  .nowbar.on{display:block}
+  .nowbar b{font-weight:600}
+  .nowbar .nt{margin:5px 0 0}
+  .nowbar .nt div{padding:1.5px 0}
+
+  .week{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);margin-top:13px;overflow:hidden}
+  .week.today-w{border-color:#e0b3a1;box-shadow:0 0 0 3px var(--ac-soft)}
+  .wk-head{display:flex;align-items:flex-start;gap:14px;padding:15px 20px;cursor:pointer;user-select:none}
+  .wk-head:hover{background:#fbfcfc}
+  .wk-n{flex:0 0 auto;width:46px;text-align:center}
+  .wk-n b{display:block;font-size:17px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+  .wk-n span{font-size:10px;color:var(--ink3);letter-spacing:.06em}
+  .wk-t{flex:1;min-width:0}
+  .wk-t h3{font-size:15.5px;font-weight:600;margin:1px 0 3px;letter-spacing:-.005em}
+  .wk-t .meta{font-size:12px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+  .tagstage{background:var(--gr-soft);color:var(--gr);padding:0 7px;border-radius:4px;font-size:11px}
+  .wk-goal{font-size:12.5px;color:var(--ink2);padding:0 20px 12px 80px;margin:-4px 0 0}
+  .chev{flex:0 0 auto;width:18px;height:18px;margin-top:5px;color:var(--ink3);transition:transform .18s}
+  .week.open .chev{transform:rotate(90deg)}
+  .wk-body{display:none;border-top:1px solid var(--line2)}
+  .week.open .wk-body{display:block}
+
+  .day{display:grid;grid-template-columns:54px 1fr;gap:0 14px;padding:10px 20px 11px 16px;border-top:1px solid var(--line2)}
+  .day:first-child{border-top:0}
+  .day.today{background:#fffbf8}
+  .dow{font-size:11.5px;color:var(--ink3);padding-top:3px;letter-spacing:.04em}
+  .dow.sun{color:var(--ac);font-weight:500}
+  .dhead{font-size:14px;font-weight:500;margin:0 0 3px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .dmin{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;font-weight:400}
+  .dtasks{list-style:none;margin:0;padding:0}
+  .dtasks li{display:flex;gap:9px;align-items:flex-start;padding:2.5px 0;font-size:13.5px;color:var(--ink2)}
+  .dtasks input{appearance:none;-webkit-appearance:none;flex:0 0 auto;width:15px;height:15px;margin:5px 0 0;
+    border:1px solid #c6ced2;border-radius:4px;background:#fff;cursor:pointer;position:relative;transition:.13s}
+  .dtasks input:checked{background:var(--gr);border-color:var(--gr)}
+  .dtasks input:checked::after{content:"";position:absolute;left:4.2px;top:1px;width:3.5px;height:8px;
+    border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(43deg)}
+  .dtasks label{cursor:pointer;flex:1}
+  .dtasks input:checked+label{color:#a8b2b8;text-decoration:line-through;text-decoration-color:#c6ced2}
+  .dtasks .m{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;flex:0 0 auto;padding-top:2px}
+  .ttag{font-size:10px;line-height:1.6;padding:0 5px;border-radius:3px;flex:0 0 auto;margin-top:3px;letter-spacing:.04em}
+  .ttag.D{background:var(--bl-soft);color:var(--bl)}
+  .ttag.B{background:var(--am-soft);color:var(--am)}
+  .dout{margin-top:5px;font-size:12px;color:var(--am);display:flex;gap:6px;align-items:baseline}
+  .dout::before{content:"产出";font-size:10px;letter-spacing:.08em;background:var(--am-soft);padding:1px 6px;border-radius:3px;flex:0 0 auto}
+
+  .quiz{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 26px;margin-top:4px}
+  .q{font-size:13.5px;color:var(--ink2);padding-left:14px;position:relative}
+  .q::before{content:"";position:absolute;left:0;top:11px;width:5px;height:5px;border-radius:50%;background:var(--gr);opacity:.5}
+
+  footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+
+  @media (max-width:800px){
+    .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .legs{grid-template-columns:1fr}
+    .exits{grid-template-columns:1fr}
+    .ledger{grid-template-columns:1fr}
+    .quiz{grid-template-columns:1fr}
+    h1{font-size:24px}
+    .wrap{padding:0 14px 80px}
+    .track-in{padding:9px 14px}
+    .day{grid-template-columns:42px 1fr;padding:10px 14px}
+    .wk-head{padding:13px 15px}
+    .wk-goal{padding-left:15px}
+  }
+  @media print{
+    .track{display:none}.wk-body{display:block!important}.week{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Full-time Sprint · 168 Days · 64 h/week · Three Tracks</p>
+    <h1>Linux BSP 24 周全职冲刺</h1>
+    <p class="lede">周期回到 24 周，时长照你要求：工作日 8 小时，周末 12 小时，共 <b>1536 小时</b>。新增的不是 500 小时的视频，而是<b>两条支线</b>：一条往下挖深度，一条横向铺保底——万一根没扎进 BSP，还有别的口能进。勾选自动保存。</p>
+    <div class="facts">
+      <div class="fact"><b>168 天</b><span>24 周，无休息日</span></div>
+      <div class="fact"><b>840 项</b><span>每天 5 项 = 4 主线 + 1 支线</span></div>
+      <div class="fact"><b>64 h/周</b><span>工作日 8 + 周末 12</span></div>
+      <div class="fact"><b>1536 h</b><span>主线 1096 · 支线 172 · 固定 268</span></div>
+    </div>
+    <div style="margin-top:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--ink2)">
+      <label for="start">开学日</label>
+      <input type="date" id="start" style="font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)">
+      <span style="color:var(--ink3)" id="startHint"></span>
+    </div>
+  </header>
+
+  <div class="nowbar" id="nowbar"></div>
+
+  <h2 class="sec">24 周怎么填满 1536 小时</h2>
+  <div class="box warn">
+    <h3>纯 BSP 的内容量只有 850–1000 小时，剩下的 500 小时不能靠拖</h3>
+    <p>上一版把周期压到 16 周，就是为了躲这个问题：内容塞不进 24 周，多出来的时间一定会变成看视频、抄代码、重装系统。你要 24 周，那就必须<b>真的再加 500 小时的内容</b>，而不是把同样的东西讲慢一点。</p>
+    <p>加的地方有三处，全部可验收：<b>①</b> 主线加厚——Yocto 从半周扩成整周，外设从 3 类扩到 8 类，驱动多加一层子系统驱动；<b>②</b> 加深度支线（每周约 4 项，共约 101 h）：从「读源码」升级到「子系统源码 + 性能 + 稳定性工程」；<b>③</b> 加保底支线（每周约 3 项，共约 71 h）：嵌入式应用、MCU/RTOS、自动化测试，这三类岗位的量比 BSP 大得多。</p>
+    <p><b>代价仍然要说：</b>64 h/周 × 168 天是职业运动员级负荷。第 6–8 周、第 13 周、第 19 周是三个已知的崩点，页面里都标了降载方案。如果你还在上班，这个计划物理上不成立——末尾有在职档。</p>
+  </div>
+
+  <h2 class="sec">三条腿：主线、深度、保底</h2>
+  <p class="sub">每天 4 项主线 + 1 项支线。支线标「深」或「保」，一天只做一项，不许两样都碰。</p>
+  <div class="legs">
+    <div class="leg l1">
+      <p class="lh">主线 · MAIN</p>
+      <h4>BSP 全链路</h4>
+      <p>C 与工程能力 → 硬件与仪器 → 交叉编译 / U-Boot / 内核 / dts / rootfs → 驱动（字符·并发·中断·platform·总线·子系统）→ 八类外设 → 调试与性能 → 项目交付。</p>
+      <div class="num">每天 4 项 · 约 <b>1096 h</b> · 决定你能不能干这行</div>
+    </div>
+    <div class="leg l2">
+      <p class="lh">深度 · DEEP</p>
+      <h4>源码与系统认知</h4>
+      <p>设备模型与 probe 调用链、内存管理、调度器、中断子系统、VFS、网络栈、ftrace/perf/eBPF、kgdb/JTAG、KASAN、PREEMPT_RT。这部分决定你<b>三年后还在不在写驱动</b>。</p>
+      <div class="num">每周约 4 项 · 约 <b>101 h</b> · 决定薪资档位</div>
+    </div>
+    <div class="leg l3">
+      <p class="lh">保底 · BACKUP</p>
+      <h4>三个可替代出口</h4>
+      <p>嵌入式应用（C++/Qt/socket/MQTT/modbus）、MCU 与 RTOS（FreeRTOS/RT-Thread/CAN/OTA）、自动化测试（Python/pytest/HIL）。这三个方向的<b>岗位数量是 BSP 的 3–5 倍</b>。</p>
+      <div class="num">每周约 3 项 · 约 <b>71 h</b> · 找不到 BSP 时的第二条路</div>
+    </div>
+  </div>
+
+  <h2 class="sec">六条出口：这份计划能投哪些岗</h2>
+  <p class="sub">走完 24 周，你手上有四份可展示的东西：BSP 原型、应用层 Demo、测试框架、一份性能报告。它们对应六类岗位。</p>
+  <div class="exits">
+    <div class="exit">
+      <h4>Linux BSP / 驱动工程师 <em>主目标</em></h4>
+      <p>W7–20 的全部主线，W21–24 的原型。这是计划的核心，也是唯一需要你<b>讲得清上电到 shell</b>的岗位。</p>
+      <div class="kw">关键词：<b>U-Boot / dts / platform driver / I2C / 内核裁剪</b> · 一线 12–20K（1–3 年）</div>
+    </div>
+    <div class="exit">
+      <h4>嵌入式应用（Linux C/C++）<em>岗位最多</em></h4>
+      <p>W1–4 的 C 底子 + 保底支线的 C++/socket/Qt，W24 交一个带界面的应用 Demo。<b>不需要碰内核也能干活</b>，岗位量是 BSP 的数倍。</p>
+      <div class="kw">关键词：<b>C++11 / 多线程 / socket / Qt / MQTT / modbus</b> · 一线 10–18K</div>
+    </div>
+    <div class="exit">
+      <h4>测试开发 / HIL 自动化 <em>门槛最低</em></h4>
+      <p>W19–20 的调试能力 + 保底支线的 pytest/HIL 框架，能自己搭一套「串口控板子跑用例」的环境。这类岗<b>最愿意要转行的</b>，因为逻辑和耐心比年限重要。</p>
+      <div class="kw">关键词：<b>Python / pytest / 自动化框架 / 串口 / CI</b> · 一线 10–16K</div>
+    </div>
+    <div class="exit">
+      <h4>MCU 固件（工业 / 车载 ECU）</h4>
+      <p>保底支线的 FreeRTOS/RT-Thread + W17 的 CAN 总线，加上 W5 的硬件底子。工业控制器、BMS、电机驱动大量缺人，<b>对学历要求比 BSP 松</b>。</p>
+      <div class="kw">关键词：<b>FreeRTOS / CAN / Modbus / 低功耗 / bootloader</b> · 一线 10–18K</div>
+    </div>
+    <div class="exit">
+      <h4>Android 系统层（车载座舱）</h4>
+      <p>不是主线，是<b>选修包</b>：W21–24 可以把项目期切到 AOSP 编译 + HAL + binder。前提是你会 Java 或 Kotlin，且目标城市是上海、广州、深圳。</p>
+      <div class="kw">关键词：<b>AOSP / HAL / binder / SELinux / 座舱</b> · 一线 15–25K，但门槛也高一档</div>
+    </div>
+    <div class="exit">
+      <h4>FAE / 技术支持 <em>兜底</em></h4>
+      <p>W1–24 全部基础 + 你的表达与文档能力（每周一篇公开笔记就是训练）。出差多、技术深度浅，但<b>入门最快，且能先进芯片厂或板厂</b>，再内部转岗。</p>
+      <div class="kw">关键词：<b>方案选型 / 客户支持 / 调试 / 文档</b> · 8–14K + 出差补贴</div>
+    </div>
+  </div>
+  <div class="box">
+    <h3>保底不是「学一半换方向」，是「同一段时间产出两种证据」</h3>
+    <p>看 W15 的例子：主线做 IIO 驱动读传感器，保底支线做 Qt 界面把这个数据画出来。<b>同一件事，两个视角，两份可展示物。</b>面试 BSP 岗你讲内核那一侧，面试应用岗你讲界面那一侧。这才是保底该有的做法——不是分身学两套，是让一份工作产出两种证明。</p>
+    <p>真正危险的做法是：一边学 BSP 一边学 Java 后端。那两条线毫无交集，最后两条都半途而废。</p>
+  </div>
+
+  <h2 class="sec">两块板的分工</h2>
+  <p class="sub">不要同时开工。两套 BSP 目录、两套启动流程，会把你绕晕。</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>阶段</th><th>用哪块</th><th>为什么是它</th></tr></thead>
+      <tbody>
+        <tr><td>W1–4</td><td>都不用</td><td>在 PC 上把 C、Makefile、gdb、git 打穿。这时候碰板子只会分散注意力，板子也解决不了你的语法问题。</td></tr>
+        <tr><td>W5–6</td><td><span class="btag">i.MX6ULL</span></td><td>只用来量电压、抓波形、点灯。<b>硬件阶段用最慢的板子</b>，因为你量的是电，不是算力。</td></tr>
+        <tr><td>W7–9</td><td><span class="btag">i.MX6ULL</span></td><td><b>慢、外设少、手册规范。</b>出错时变量少，容易定位。NXP 的 Reference Manual 结构清晰，打地基就该用变量最少的板子。</td></tr>
+        <tr><td>W10</td><td><span class="btag rk">RK3568</span></td><td><b>换板复现周。</b>同样的流程在另一套 SDK 上重走一遍——这一步能拆穿「你到底会不会」和「你只会抄这一家的教程」。</td></tr>
+        <tr><td>W11–15</td><td><span class="btag">i.MX6ULL</span></td><td>驱动阶段回简单板子。中断、并发、platform、I2C 这些概念，在单核 A7 上出问题最好查。</td></tr>
+        <tr><td>W16–20</td><td><span class="btag rk">RK3568</span></td><td><b>外设广度靠它。</b>千兆网口、MIPI DSI、CAN、USB3、PCIe，i.MX6ULL 都没有。简历上要写的八类外设，这里才凑得齐。</td></tr>
+        <tr><td>W21–24</td><td><span class="btag rk">RK3568</span></td><td><b>项目板。</b>四核 A55 跑得动带界面的原型，接口多，而且它在工业网关、商显、车载后装真的在用。</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box">
+    <h3>三条必须提前知道</h3>
+    <p><b>1｜韦东山那套视频是字典，不是连续剧。</b>卡住了就去搜「那一节的第几分钟」，不要从第 1 期第 1 集顺序追完。追完你会以为自己会了，然后手是生的——讲得太清楚恰恰是这类课程最大的陷阱。</p>
+    <p><b>2｜RK3568 别提前玩。</b>Rockchip 的 SDK 封装极厚，一条 <code>./build.sh</code> 把所有东西都给你编出来，你会「会用但不懂」。等 W10 有能力拆开看的时候再用；提前上手会养成只会跑脚本的习惯，面试一问就穿。</p>
+    <p><b>3｜i.MX6ULL 的源码包亲手整理一遍。</b>整理成 <code>board/ boot/ kernel/ rootfs/ tools/</code> 的结构。这件事本身就是 BSP 的日常，也是你简历里「我懂工程组织」的证据。</p>
+  </div>
+
+  <h2 class="sec">八条铁律</h2>
+  <p class="sub">违反任何一条，这个计划就不成立。全职冲刺没有冗余度。</p>
+  <div class="laws">
+    <div class="law"><div><b>每天必须有一次 commit。</b>没有提交记录的那天，按 0 分计，哪怕只改了一个注释。</div></div>
+    <div class="law"><div><b>每天第一件事是回看昨天的笔记</b>，不是打开新内容。15 分钟，不做这步不进主任务。</div></div>
+    <div class="law"><div><b>看视频不超过 30 分钟/天。</b>8 小时里 7 小时必须是自己在写、在调、在读源码。</div></div>
+    <div class="law"><div><b>手机放在另一个房间。</b>8 小时深度工作不是「在线 8 小时」，被消息切碎的时间不算工时。</div></div>
+    <div class="law"><div><b>每个 bug 必须落成笔记：</b>现象 → 假设 → 验证 → 根因。四项缺一，等于没修过。</div></div>
+    <div class="law"><div><b>卡住超过 2 小时就跳过</b>，记进待办，周日 21:00 统一处理。全职最容易死在「非要今晚搞明白」上。</div></div>
+    <div class="law"><div><b>每周日 23:00 前发一篇公开笔记</b>，300 字也算。24 周要攒下 24 篇，这是你唯一的对外证据。</div></div>
+    <div class="law"><div><b>每两周做一次破坏性测试：</b>故意删一把锁、改错一个地址、制造越界，看系统怎么崩。你对系统的理解深浅，全在这个动作里。</div></div>
+  </div>
+
+  <h2 class="sec">每日时间账本</h2>
+  <p class="sub">64 小时/周必须切成固定块，否则你会每天花两小时决定从哪开始。</p>
+  <div class="ledger">
+    <div class="led">
+      <h3>工作日 · 周一至周五 · 8.0 h/天</h3>
+      <div class="row"><span>07:00–07:40 读英文手册 / Datasheet</span><span class="tm">40 min</span></div>
+      <div class="row"><span>09:00–10:50 主线 ①（一天里最难的放这）</span><span class="tm">110 min</span></div>
+      <div class="row"><span>11:00–11:50 主线 ②</span><span class="tm">50 min</span></div>
+      <div class="row"><span>14:00–15:40 主线 ③</span><span class="tm">100 min</span></div>
+      <div class="row"><span>16:00–17:00 主线 ④（源码 / 联调）</span><span class="tm">60 min</span></div>
+      <div class="row"><span>20:00–20:50 支线（深 或 保，只做一项）</span><span class="tm">50 min</span></div>
+      <div class="row"><span>21:00–21:40 补账 / 跑通昨天的实验</span><span class="tm">40 min</span></div>
+      <div class="row"><span>21:40–22:10 写笔记 + commit</span><span class="tm">30 min</span></div>
+      <div class="tot">合计 <span>8.0 小时</span> × 5 天 = 40 h</div>
+    </div>
+    <div class="led">
+      <h3>周末 · 周六 / 周日 · 12.0 h/天</h3>
+      <div class="row"><span>08:30–09:00 回看本周笔记</span><span class="tm">30 min</span></div>
+      <div class="row"><span>09:00–12:00 主线 ①（大块实验）</span><span class="tm">180 min</span></div>
+      <div class="row"><span>13:30–16:00 主线 ②</span><span class="tm">150 min</span></div>
+      <div class="row"><span>16:30–19:00 主线 ③</span><span class="tm">150 min</span></div>
+      <div class="row"><span>19:30–21:00 主线 ④ / 验收</span><span class="tm">90 min</span></div>
+      <div class="row"><span>21:00–22:30 支线（大块产出 / 公开笔记）</span><span class="tm">90 min</span></div>
+      <div class="row"><span>22:30–23:00 写笔记 + commit</span><span class="tm">30 min</span></div>
+      <div class="tot">合计 <span>12.0 小时</span> × 2 天 = 24 h · 每周共 <span>64 h</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec">仪器采购</h2>
+  <p class="sub">开发板你已经有了，只剩仪器。这一节只说不该买错的地方。</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>物品</th><th>规格</th><th>预算</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>逻辑分析仪</td><td>8 通道 24MHz，兼容 Saleae</td><td class="n">50–90</td><td>抓 I2C / SPI / UART / CAN 够用。<b>认准能跑 Saleae Logic 2 的</b>，杂牌上位机软件会让你用两次就放弃。</td></tr>
+        <tr><td>示波器 <span class="btag am">重点</span></td><td>100MHz 带宽 · 双通道 · 1GSa/s</td><td class="n">1500–2600</td><td><b>100MHz 是底线，不要买 50MHz。</b>50MHz 看不了 RGMII、MIPI，等于白买；双通道才能同时看时钟和数据。</td></tr>
+        <tr><td>无源探头</td><td>10:1，×2 根</td><td class="n">随机器</td><td>多数标配两根。再买一根备用不亏，探头是最容易摔坏的耗材。</td></tr>
+        <tr><td>测试钩 / 小夹子</td><td>10 个</td><td class="n">20–30</td><td><b>比探头尖点稳得多。</b>没有它，你得一只手按探头、一只手敲键盘。</td></tr>
+        <tr><td>USB 转串口</td><td>CH340 / CP2102</td><td class="n">15–30</td><td>买两根。板子多，来回插拔很烦，而且坏得莫名其妙。</td></tr>
+        <tr><td>CAN 收发器模块</td><td>MCP2551 / TJA1050</td><td class="n">10–20</td><td>W17 要用。板子上的 CAN 引脚是 TTL 电平，不接收发器上不了总线。</td></tr>
+        <tr><td>万用表</td><td>入门数字款，带通断蜂鸣</td><td class="n">60–100</td><td>测供电、查断线。蜂鸣档比看数字快十倍。</td></tr>
+        <tr><td>人体工学</td><td>腰靠 + 腕托 + 定时起身</td><td class="n">100–200</td><td>64 小时/周坐 24 周，腰和手腕是真会出问题的。别当玩笑看。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="sec">五条淘汰线</h2>
+  <p class="sub">全职冲刺没有余地，这几关不过就停，别往后拖——拖过去只是把问题推到面试现场。</p>
+  <div class="fails">
+    <div class="fail"><span class="wk">第 4 周</span><div><b>不能闭卷手写 200 行 C</b>（链表 + 环形缓冲）→ C 基础不够，回炉 1 周再往下。</div></div>
+    <div class="fail"><span class="wk">第 10 周</span><div><b>不能在 RK3568 上三天内复现「编译 → 烧写 → 启动 → 改 dts」</b>，或讲不清上电到 shell 的链路 → 你只是会抄某一家教程。</div></div>
+    <div class="fail"><span class="wk">第 15 周</span><div><b>不能独立完成 platform driver + dts 匹配 + I2C 传感器全链路</b> → 驱动没入门，停在这里补，不要进外设阶段。</div></div>
+    <div class="fail"><span class="wk">第 20 周</span><div><b>交不出一份启动优化报告，或定位不了一个真实 oops</b> → 你只会让东西跑起来，不会让它跑好。这是初级和中级的分界。</div></div>
+    <div class="fail"><span class="wk">第 24 周</span><div><b>没有能当场演示的原型（含断电恢复）</b> → 前面 23 周基本白干，因为你无法证明任何东西。</div></div>
+  </div>
+
+  <div class="track">
+    <div class="track-in">
+      <div class="bar-row">
+        <span class="cnt">总进度</span>
+        <div class="bar"><i id="fill"></i></div>
+        <span class="cnt"><b id="done">0</b> / <span id="total">0</span></span>
+        <button type="button" id="expandAll" class="chip" style="padding:4px 11px">展开全部</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+
+  <div id="weeks"></div>
+
+  <h2 class="sec">面试会问的十二个问题</h2>
+  <p class="sub">前八个是 BSP 岗必问；后四个是保底岗（应用 / 测试 / MCU）的常见问法。答不出来就回补对应的周。</p>
+  <div class="quiz">
+    <div class="q">从按下电源到 shell 出现，依次发生了什么？</div>
+    <div class="q">dts 是怎么被解析的，probe 在什么时机被调用？</div>
+    <div class="q">中断上半部和下半部的区别，什么时候必须用工作队列？</div>
+    <div class="q">自旋锁里能睡眠吗，为什么？互斥量能在中断里用吗？</div>
+    <div class="q">copy_to_user 为什么不能用 memcpy 代替？</div>
+    <div class="q">内核 panic 了，你从哪几行开始看？</div>
+    <div class="q">板子启动要 8 秒，你怎么把它压到 4 秒？</div>
+    <div class="q">讲一个你调了三天以上的 bug，根因是什么？</div>
+    <div class="q">一个进程 CPU 占满，你怎么定位到是哪一行代码？</div>
+    <div class="q">你的测试框架怎么判断「板子挂了」而不是「用例失败」？</div>
+    <div class="q">RTOS 的任务切换和 Linux 的线程切换差在哪？</div>
+    <div class="q">为什么选这个方向？如果让你做应用层，你愿意吗？</div>
+  </div>
+
+  <h2 class="sec">全职冲刺的五个陷阱</h2>
+  <div class="box">
+    <p><b>1｜用「在线时长」替代「深度时长」。</b>8 小时里如果有 3 小时在刷消息、看视频、重装系统，那实际只有 5 小时。全职最大的敌人不是难度，是时间看起来很多。</p>
+    <p><b>2｜三个崩点：第 6–8 周、第 13 周、第 19 周。</b>第 6 周是新鲜感耗尽 + 驱动开始难；第 13 周是 platform 驱动卡住 + 体力见底；第 19 周是性能和稳定性阶段，抽象、看不到进展。对策只有一个——那几天把任务量减半，<b>但绝不中断</b>。断一天，接回来的成本是一周。</p>
+    <p><b>3｜把教程当天书读。</b>看 10 分钟，关掉，自己敲，卡住了再回去看那一段。这是唯一有效的用法。</p>
+    <p><b>4｜跳过手搓 Buildroot / Yocto。</b>只会在厂商镜像上改驱动，面试一问「rootfs 怎么来的」就露馅。W9 那一周不要跳。</p>
+    <p><b>5｜支线越做越重。</b>支线每天只有 50 分钟，它的作用是「铺第二条路」，不是「再学一个专业」。如果某天支线吃了两个小时，那天主线一定是欠账了。</p>
+  </div>
+
+  <h2 class="sec">如果你还在上班</h2>
+  <div class="box">
+    <h3>80% 的人会在这里自我欺骗</h3>
+    <p>工作日 8 小时意味着白天完全空出来。如果你现在有工作，这个计划<b>不可能执行</b>——不是意志力问题，是物理上不存在那 8 小时。</p>
+    <p><b>在职档：</b>工作日 1.5 h（21:00–22:30）+ 周末 9 h × 2 = <b>25.5 h/周</b>，周期拉到 <b>40 周</b>。删掉支线里的保底部分（只留深度），主线不删。</p>
+    <p><b>半职档：</b>工作日 4 h + 周末 10 h = 40 h/周，周期 <b>32 周</b>。保留深度支线，砍掉一半保底支线。这个档位是多数人能坚持的上限。</p>
+    <p>宁可拉长，不要断。断了就再也接不上——这是所有自学计划最常见的死法，而且它从来不是因为太难，是因为计划表本身不现实。</p>
+  </div>
+
+  <footer>
+    进度存于本机浏览器 localStorage（key <code>bsp-plan-v2</code>），清缓存会丢，重要节点另外记一份。<br>
+    本页为唯一版本。168 天 = 24 周 × 7 天，每天 5 项（4 主线 + 1 支线），共 840 项。支线标「深」为源码与系统认知，标「保」为应用 / MCU / 测试三条保底路径。
+  </footer>
+</div>
+
+<script>
+const DOW = ["周一","周二","周三","周四","周五","周六","周日"];
+const TOTAL_DAYS = 168;
+
+const PLAN = [
+{w:1,s:"阶段 1 · C 与工程能力",t:"环境、指针、工具链",g:"8 小时全给 C 和工具链。这周不碰板子的功能，只把串口打通——你不会想在 W7 才发现串口工具是坏的。",days:[
+ ["环境与工具链",[["装 Ubuntu 22.04（WSL2 或虚拟机），磁盘 80G+，配好 git、ssh、vim 或 VS Code Remote",110],["装交叉工具链 arm-linux-gnueabihf，编一个 hello 并用 file 确认是 ARM 架构",50],["串口打通：CH340 驱动 + picocom，看到板子启动日志并能中断进 U-Boot",100],["读《精通嵌入式 Linux 编程》第 1 章，列出 5 个你答不上来的问题",60],["读内核 Documentation/process/1.Intro.rst，搞清一个补丁从提交到合并要经过什么",50,"D"]],"仓库首提交 + 串口日志截图"],
+ ["指针三件套",[["地址、解引用、指针运算、数组退化，手写 20 个小程序",110],["gdb 逐条观察指针变量的值与地址变化，截图记录",50],["不用库手写 strcpy / memcpy / strlen / strcmp，处理 NULL 与内存重叠",100],["读 glibc 里 memcpy 声明中的 restrict，说明它到底防的是什么",60],["Python：遍历目录调 gcc、收集编译警告并输出成列表的脚本",50,"B"]],"20 个程序 + 4 个自实现字符串函数"],
+ ["二级指针与函数指针",[["二级指针、指针数组、数组指针三者区别，画图说明",110],["手写 char** 字符串数组排序，只许用指针和 strcmp",50],["函数指针 + 回调，实现 3 状态状态机并能打印迁移",100],["读 qsort 的声明，说明回调在排序内部是怎么被调用的",60],["读 include/linux/types.h 与 compiler.h，弄清 __user、__iomem、__init 各是什么",50,"D"]],"排序程序 + 状态机 demo"],
+ ["结构体与内存布局",[["结构体对齐规则，写 5 个结构体打印 sizeof 再调成员顺序对比",110],["栈 / 堆 / .bss / .data / .text，用 nm、objdump、size 验证",50],["volatile / const / static / inline 各写正反例，重点说清 volatile 防什么",100],["读 compiler.h 的 READ_ONCE / WRITE_ONCE，说明内存屏障解决了什么",60],["用 Python 解析 size 输出生成 markdown 表，留作简历里的量化素材",50,"B"]],"内存布局图 + 4 组对照代码"],
+ ["位操作与字节序",[["位操作宏全套，写 reg_macro.h 并单测",110],["字节序检测 + 32 位转换函数，处理非对齐访问",50],["union 解析 8 字节自定义协议头，打印每个字段",100],["读 cpu_to_le32 系列实现，说明为什么不能直接强制类型转换",60],["读 include/uapi/linux/ 下一个 ioctl 定义，弄懂 _IOW 的位布局怎么算",50,"D"]],"reg_macro.h + 协议解析 demo"],
+ ["补账与重构",[["补完本周欠账，K&R 第 5 章习题做完并核对",180],["20 个指针练习合上答案重做，记录错在第几题",150],["写 800 字笔记：指针到底难在哪，用你自己的话",150],["整理 commit message，检查每条是否说得清在干什么，补一份 README",90],["读内核 CodingStyle 前 3 节，按它把你的代码改一遍，记录改了什么",90,"D"]],"公开笔记 1 篇"],
+ ["周验收",[["闭卷手写 30 行单链表：插入、删除、打印，计时 40 分钟",180],["复盘：这周哪些时间被浪费，下周具体砍掉什么",150],["预习 W2：先自己想一遍 container_of 怎么实现",150],["读 include/linux/list.h 前 60 行，手抄一遍",90],["Python：写一个学习日志生成器，自动统计当天 commit 数与笔记字数",90,"B"]],"链表代码 + 一页复盘"]
+]},
+{w:2,s:"阶段 1 · C 与工程能力",t:"宏、链表、环形缓冲",g:"本周代码量最大。全部自己写，不许复制——第 4 周淘汰线考的就是这几样。",days:[
+ ["宏的边界",[["do{}while(0)、#、##、变长参数；宏为什么必须给参数加括号",110],["写 10 个宏练习题，含带文件名与行号的日志宏",50],["实现 MIN / MAX / ARRAY_SIZE / BIT 四个宏并处理副作用",100],["读 kernel.h 里的 ARRAY_SIZE 与 container_of，逐字解释",60],["读 include/linux/build_bug.h，弄清 BUILD_BUG_ON 怎么在编译期就报错",50,"D"]],"日志宏可直接用"],
+ ["container_of",[["自己实现 offsetof 与 container_of，解释为什么能这么算",110],["写单测：从成员指针反推结构体首地址，验证 3 种偏移",50],["用 container_of 实现一个侵入式链表，节点嵌进业务结构体",100],["对比侵入式链表与「节点里存指针」两种设计的取舍",60],["C++：class 与 struct 的区别、构造析构、RAII 三句话讲清并各写一例",50,"B"]],"my_container_of.h + 单测通过"],
+ ["双向链表",[["实现 init / insert_head / insert_tail / delete / foreach",110],["节点放业务数据指针，按真实用法写而不是玩具版",50],["加一个 safe 版遍历（允许边遍历边删）",100],["读 list_for_each_entry_safe，说出它为什么需要两个指针",60],["读 include/linux/rbtree.h 的接口，说明红黑树比链表强在哪、代价是什么",50,"D"]],"list.c 约 250 行"],
+ ["链表实战",[["用链表实现 LRU 缓存（哈希 + 双向链表）",110],["跑 10000 次随机 get/put，用 valgrind 确认无泄漏",50],["测命中率与淘汰顺序是否符合预期",100],["分析：如果改成单链表，复杂度会变成多少",60],["C++：把 LRU 用 list + unordered_map 重写一版，对比代码量与可读性",50,"B"]],"LRU 通过压测"],
+ ["环形缓冲区",[["实现单生产者单消费者 ringbuf，正确处理 wrap-around",110],["写测试：写入远快于读取时，丢数据还是阻塞？说清设计取舍",50],["加「满了返回错误」和「满了覆盖最旧」两种模式",100],["读内核 kfifo 的实现要点，对比你的实现差在哪",60],["读 kfifo 的无锁实现，说明单生产者单消费者为什么不需要锁",50,"D"]],"ringbuf.c + 测试"],
+ ["补账与重构",[["把本周代码合成一个可复用库，带 Makefile 和单测",180],["用 -Wall -Wextra -Werror 编译，清掉所有警告",150],["写一篇笔记：环形缓冲的三种边界条件怎么保证正确",150],["整理仓库目录，写 README 说明每个文件干什么",90],["读内核 lib/ 下一个数据结构实现（idr 或 bitmap），写 300 字摘要",90,"D"]],"可复用库 + 笔记"],
+ ["周验收",[["闭卷重写链表核心 4 个函数 + ringbuf 的读写，计时 90 分钟",180],["对比原版找差距，把差异写进笔记",150],["预习 W3：编译四阶段每步产物长什么样",150],["读 drivers 下随便一个真实链表用法，说出它这段在干什么",90],["Python：写一个 C 代码统计脚本（文件数、行数、函数数），简历要用",90,"B"]],"闭卷成绩 + 差异清单"]
+]},
+{w:3,s:"阶段 1 · C 与工程能力",t:"编译链接、Makefile、gdb、CI",g:"这周学的是「程序怎么变成可执行文件」。面试问链接错误、问 core dump，考的就是这一周。",days:[
+ ["编译四阶段",[["预处理 / 编译 / 汇编 / 链接，四步分别单独执行并保存产物",110],["用 file、nm、readelf 看每步产物，说明每步多了什么",50],["制造一个未定义符号和一个重复定义，看链接器报错措辞",100],["读 ELF 头结构，找出入口地址和段表偏移",60],["读内核 vmlinux.lds.S，说明内核的段是怎么排布的",50,"D"]],"四阶段实验记录"],
+ ["库与链接",[["制作静态库 .a 与动态库 .so，分别链接并对比体积",110],["用 --sysroot 和 -L/-l 控制链接路径，制造一次找不到库",50],["用 ldd / readelf -d 分析依赖，说明 RPATH 有什么用",100],["读动态链接器如何解析符号，说明为什么 .so 加载比 .a 慢",60],["Python：用 ctypes 调你写的 .so，理解 ABI 边界到底在哪",50,"B"]],"库实验 + 报错分析"],
+ ["Makefile",[["变量、模式规则、自动变量 $@ $< $^、伪目标 .PHONY",110],["用 -MMD -MP 自动生成头文件依赖，改 .h 验证只重编相关文件",50],["写一个支持 debug / release 两种配置的 Makefile",100],["读内核顶层 Makefile 前 100 行，说出它怎么组织几千个目录",60],["读 Documentation/kbuild/makefiles.rst 前两节，弄懂 obj-y 与 obj-m 的区别",50,"D"]],"两套配置的 Makefile"],
+ ["gdb 实战",[["断点 / 单步 / bt / 打印结构体 / 改内存 / attach 运行中进程",110],["用 gdb 定位空指针解引用，找到具体行并解释现场",50],["用 core dump 复现一次崩溃并分析栈",100],["读一次 disassemble，对着源码看编译器把哪几行优化没了",60],["pytest 入门：用 ctypes 调你的 ringbuf，写 5 个用例",50,"B"]],"gdb 调试记录 + 反汇编对照"],
+ ["内存工具与 CI",[["valgrind 抓泄漏、ASan 抓越界，读懂 allocated by 那条栈",110],["自己埋 3 个 bug（泄漏 / 越界 / use-after-free）全部找出",50],["用 strace 看一次系统调用序列，说明程序启动做了什么",100],["读 /proc/self/maps，标出你的程序各个段在哪",60],["读 Documentation/dev-tools/kasan.rst，说明 KASAN 能抓什么、抓不到什么",50,"D"]],"3 个 bug 修复记录"],
+ ["阶段项目",[["把链表、LRU、环形缓冲、日志宏合成一个多文件工程，带单测",180],["make && make test 一键跑通，-Wall -Wextra 零警告",150],["写一份 300 字设计说明：模块怎么分、依赖为什么这么走",150],["建 git 仓库 + pre-commit 或 GitHub Actions，自动跑编译和测试",90],["用 Qt 或 GTK 写一个 20 行的窗口程序，确认桌面环境能跑起来",90,"B"]],"完整工程 + 自动化检查"],
+ ["周验收",[["闭卷写 100 行：随便挑两个数据结构，不查资料",180],["自评：链接错误、core dump 这两类问题现在能不能独立定位",150],["读 Kconfig 语法，为 W8 内核裁剪铺垫",150],["读《精通嵌入式 Linux 编程》第 2 章，标出与你已有认知冲突的地方",90],["读 scripts/Makefile.build，说明 Kbuild 怎么递归进入子目录",90,"D"]],"自评清单"]
+]},
+{w:4,s:"阶段 1 · C 与工程能力",t:"算法、工程化与第一条淘汰线",g:"本周末是第一条淘汰线。过不了就回炉一周，别硬撑——24 周最怕带病前进。",days:[
+ ["排序与查找",[["实现快排 / 归并 / 堆排，各写复杂度与稳定性分析",110],["二分查找的 4 种边界写法，逐个验证哪种会死循环",50],["用 time 或 perf 测 100 万数据排序耗时，做成对比表",100],["读内核 lib/sort.c，说明它为什么用堆排而不是快排",60],["读 lib/list_sort.c，说明归并在链表上为什么比数组更合适",50,"D"]],"三种排序 + 耗时表"],
+ ["哈希与位图",[["实现开放寻址哈希表，处理冲突与扩容",110],["实现 bitmap 的 set / clear / test / find_first_zero",50],["做 10 万次插入删除压测，记录负载因子与耗时曲线",100],["读内核 hlist 与 idr 的用途，各举一个真实使用场景",60],["Python：用 dict 做同样压测，对比 C 与 Python 的性能差多少倍",50,"B"]],"哈希表 + 压测数据"],
+ ["状态机与协议解析",[["用函数指针表实现一个 5 状态的协议解析器",110],["输入乱序、截断、超长报文，测健壮性",50],["加日志与统计计数，能定位卡在哪个状态",100],["读 drivers/tty/serial 下的状态处理，看内核怎么写状态机",60],["读一个真实协议栈的解析函数（如 net/ipv4/tcp_input.c 的入口），只说结构不抠细节",50,"D"]],"协议解析器 + 异常测试"],
+ ["工程化",[["git 分支 / rebase / cherry-pick / stash，模拟一次协作冲突并解决",110],["写 .gitignore 与 pre-commit 钩子（编译 + 格式检查）",50],["把工程拆成 lib / app / tests 三层，写清依赖方向",100],["读内核 MAINTAINERS 与 subsystem 划分，说明大工程怎么分片",60],["C++：用 CMake 重写一份构建，对比 Makefile 的取舍",50,"B"]],"三层工程结构"],
+ ["可测试性与重构",[["给库加一个 IO 抽象层，使硬件依赖可 mock",110],["用 mock 写 5 个不依赖硬件的用例",50],["重构：把最长的一个函数拆到 30 行以内",100],["读 include/linux/device.h，看内核怎么定义抽象接口",60],["读 coding-style.rst 后 3 节，按函数长度与缩进要求检查自己的代码",50,"D"]],"可 mock 的库 + 重构记录"],
+ ["淘汰线准备",[["把 W1–W4 全部代码过一遍，列出还不懂的点",180],["手写链表 + ringbuf + 日志宏，不看任何参考，计时 100 分钟",150],["造 3 个 bug 让隔天的自己找，检验代码可读性",150],["整理仓库 README，写清每个模块解决什么问题",90],["读 list.h 全部 API，说出每个函数在什么场景用",90,"D"]],"自测成绩"],
+ ["淘汰线自评",[["闭卷 200 行 C（链表 + 环形缓冲），不查资料，计时 120 分钟",180],["自评过没过。没过就排 1 周回炉，别往下走",150],["通读 i.MX6ULL 原理图前 15 页，标出所有看不懂的符号",150],["读 SoC 手册目录，标出 GPIO / IOMUXC / UART / CCM 在第几章",90],["写第一篇公开笔记（C 里最容易踩的 5 个坑）并发布",90,"B"]],"淘汰线 1 结论 + 公开笔记"]
+]},
+{w:5,s:"阶段 2 · 硬件与仪器",t:"原理图、电源与启动路径",g:"目标不是会画板，是能判断「问题出在软件还是硬件」。这是 BSP 与纯软件工程师的分界线。",days:[
+ ["电源树",[["通读 i.MX6ULL 原理图，画出从输入到 SoC 各路的电源树",110],["标出每路的使能引脚和上电顺序，说明为什么必须有序",50],["用万用表实测各路电压，与图纸逐个对照",100],["读 PMIC 手册的启动时序图，说明哪一路最先起、为什么",60],["读 SoC 手册 CCM 章节，列出各外设的时钟源与门控寄存器",50,"D"]],"手绘电源树 + 实测表"],
+ ["启动路径",[["复位电路、晶振、BOOT 拨码如何决定启动介质",110],["画出从 BOOT 引脚电平到实际启动设备的完整路径",50],["拔掉 SD 卡、改拨码，记录每种组合的现象",100],["读 SoC 手册 Boot 章节的启动设备选择表",60],["用手焊给板子补两个排针或飞线引出 GPIO，练手上功夫",50,"B"]],"启动路径图 + 拨码现象表"],
+ ["引脚与 GPIO",[["查 IOMUXC 章节，列出 UART / I2C / SPI / LED 各占哪些引脚",110],["读 GPIO 章节，找到方向寄存器与数据寄存器的偏移",50],["用 devmem2 直接读写 GPIO 寄存器点灯，不经过驱动",100],["读 pinctrl 文档，说明 dts 里的 pinctrl 节点对应哪组寄存器",60],["读 drivers/pinctrl 下 fsl 的实现，找到 set_mux 怎么写寄存器",50,"D"]],"寄存器点灯成功"],
+ ["GPIO 电气",[["推挽 vs 开漏、上下拉、灌电流与拉电流上限",110],["算 LED 限流电阻，再量板上实际电阻看是否吻合",50],["测复位按键按下前后的电平变化，估算抖动时间",100],["读 Datasheet 的 IO 电气特性表，找出 VIL / VIH 的具体数值",60],["用 pyserial 写一个板子日志抓取器，自动带时间戳存档",50,"B"]],"计算过程 + 实测对照"],
+ ["电源异常与复位",[["用可调电源把 3.3V 缓慢降到 2.8V，看板子在哪一刻挂、日志说什么",110],["测掉电瞬间的复位波形，说明为什么要有欠压复位",50],["找到板上的 TVS / ESD 器件，说明它们保护什么",100],["读 SoC 手册复位章节，列出几种复位源与区别",60],["读 drivers/regulator 框架文档，说明 dts 怎么描述电源树",50,"D"]],"欠压曲线 + 复位源表"],
+ ["硬件阶段验收",[["照原理图找到 LED 的 GPIO、bank、脚号，命令行点亮",180],["录 3 分钟视频：指认引脚 → 点亮 → 解释原理图依据",150],["写一页「没有原理图时怎么摸清一块板」的方法",150],["复查电源树笔记，补上全部实测数据",90],["读 Documentation/devicetree/bindings 下 regulator 的 binding，看懂一个 dts 片段",90,"D"]],"3 分钟录像（面试可用）"],
+ ["周验收",[["不看资料，画一遍 i.MX6ULL 的启动路径图",180],["用 Python 画一张电源树图（graphviz），放进公开笔记",150],["预习 W6：串口帧格式与波特率误差怎么算",150],["整理本周截图与波形，统一命名归档",90],["读 SoC 手册 UART 分频寄存器，手算 115200 的分频值",90,"D"]],"启动路径图 + 归档目录"]
+]},
+{w:6,s:"阶段 2 · 硬件与仪器",t:"时序、总线与故障注入",g:"这周全靠仪器。目标是把「代码 → 寄存器 → 引脚 → 波形」这条链路打通，以后调不通就知道该看哪一层。",days:[
+ ["UART 时序",[["帧格式、波特率误差，为什么 115200 在 12MHz 下不整除",110],["逻辑分析仪抓串口输出并解码，逐位解释",50],["故意改错波特率，看接收端收到什么",100],["读 UART 控制器寄存器，找出分频与过采样字段",60],["读 drivers/tty/serial/imx.c 的 set_termios，说明驱动怎么算分频",50,"D"]],"波形 + 逐位解释"],
+ ["I2C",[["起始 / 地址 / ACK / NACK / 重复起始 / 停止，逐个说清",110],["抓一段真实 I2C，逐字节标注含义",50],["接反 SDA/SCL、拆上拉、拉低总线，各试一次并记录现象",100],["读 I2C 控制器手册的时钟分频与 FIFO 章节",60],["用 smbus2 在用户态直接读传感器寄存器，理解两条路径的差别",50,"B"]],"两份波形判读 + 故障记录"],
+ ["SPI",[["SPI 四种模式实测，判断器件工作在哪种模式及理由",110],["抓 SPI 波形，标出 CPOL / CPHA 与实际边沿的对应",50],["改错模式，看读到什么垃圾数据",100],["读 SPI 控制器手册的片选与 DMA 章节",60],["读 drivers/spi/spi.c 核心路径，说明 spi_message 怎么下发",50,"D"]],"模式对照表"],
+ ["示波器",[["3.3V 纹波（AC 耦合 + 20MHz 带宽限制），量峰峰值",110],["看上电时序：3.3V 与 1.8V 谁先起、间隔多少",50],["看晶振起振波形，量频率与上升时间",100],["说明探头 1:1 与 10:1 的差异，什么时候必须用 10:1",60],["用 C++ 写环形缓冲 + 二进制协议解析，为仪器数据采集铺垫",50,"B"]],"纹波数据 + 时序截图"],
+ ["CAN 总线预习",[["CAN 差分电平、显性隐性、仲裁机制",110],["接 MCP2551 用逻辑分析仪抓 CAN 帧，标出 ID 与数据",50],["说清为什么用双绞线、120Ω 终端电阻的作用",100],["读 SocketCAN 文档，看 Linux 怎么把 CAN 抽象成网络设备",60],["读 drivers/net/can 下一个驱动，说明它怎么和控制器交互",50,"D"]],"CAN 帧解析"],
+ ["故障注入大实验",[["制造 5 种总线故障：短路、上拉缺失、地址冲突、时钟拉伸超时、地弹",180],["每种故障记录波形 + 内核日志 + 你的判断依据",150],["画「从代码到波形」链路图：应用 → 驱动 → 寄存器 → 引脚 → 器件",150],["总结一份「总线调试速查表」，能贴在工位上",90],["读 Documentation/i2c 下的 fault-injection 说明",90,"D"]],"5 种故障对照表 + 速查表"],
+ ["周验收",[["闭卷解释一次完整的 I2C 读时序，并画波形",180],["录 5 分钟视频：用示波器讲清一个信号问题",150],["写公开笔记：示波器入门，我踩过的 3 个坑",150],["预习 W7：交叉编译为什么不能直接 gcc -o",90],["读 Documentation/driver-api 目录，标出接下来要读的部分",90,"D"]],"5 分钟视频 + 公开笔记"]
+]},
+{w:7,s:"阶段 3 · 系统构建",t:"交叉编译与 U-Boot",g:"这周你会第一次真正「拥有」一块板子，而不是用别人给的镜像。",days:[
+ ["交叉编译",[["工具链前缀、--sysroot、ABI，为什么 x86 编的跑不了 ARM",110],["编译 hello 到 ARM，用 file 和 readelf -h 确认",50],["交叉编译 zlib 装到 sysroot，让 hello 链接上它",100],["读工具链的 specs 文件，说明默认搜索路径怎么定的",60],["写 shell 脚本一键搭好工具链环境，换机器也能用",50,"B"]],"ARM 可执行 + 库链接成功"],
+ ["U-Boot 编译",[["拉源码，找到 i.MX6ULL 对应 defconfig 与 dts",110],["编译出 u-boot-with-spl.imx，用 dd 烧到 SD 卡正确偏移",50],["串口进命令行，printenv 看全部环境变量",100],["读 board_init / dram_init 调用路径，找到 DDR 参数在哪",60],["读 arch/arm/cpu/armv7/start.S，找到第一条跳到 C 的指令",50,"D"]],"进入 U-Boot prompt"],
+ ["引导内核",[["bootargs 与 bootcmd 各管什么，改一次验证生效",110],["用 tftp 或 fatload 把内核和 dtb 加载到内存",50],["用 bootz 手动启动，说清每个地址的含义",100],["读 U-Boot 默认 bootcmd，逐段解释它在干什么",60],["读 common/main.c 的 main_loop，说明命令行怎么被解析执行",50,"D"]],"手动 boot 成功"],
+ ["环境变量与命令",[["setenv / saveenv / run，写一个自动选择启动介质的脚本",110],["用 U_BOOT_CMD 宏加一个自定义命令并编译进去",50],["用 mmc 命令读写分区，验证偏移计算对不对",100],["读 env 的存储格式（CRC + 键值），说明为什么要冗余",60],["用 pyserial 写 U-Boot 命令自动化脚本（进 prompt、发命令、取输出）",50,"B"]],"自定义命令可用 + 自动化脚本"],
+ ["启动链精读",[["读 SoC 手册 Boot 章节：ROM → SPL → U-Boot 各负责什么",110],["说明 SPL 为什么必须存在（此刻 DDR 还没初始化）",50],["画一张 U-Boot 启动流程图：从 _start 到 bootcmd",100],["读 SPL 的链接脚本，说明它为什么必须被加载到 OCRAM",60],["读 common/spl/spl.c，说明 SPL 怎么决定加载哪个镜像",50,"D"]],"启动流程图"],
+ ["大实验",[["把 W3 的工程交叉编译后用 NFS 挂到板子上跑起来",180],["整理「交叉编译踩坑清单」至少 10 条，逐条写原因",150],["清理所有中间产物，从零再走一遍，验证清单是否完整",150],["写笔记：U-Boot 到底替内核做了哪些事",90],["读 U-Boot 的 driver model 文档，说明它和内核设备模型的异同",90,"D"]],"踩坑清单 + 笔记"],
+ ["周验收",[["讲 3 分钟：上电到 U-Boot 命令行，中间发生了什么，录音",180],["写公开笔记：手把手编译 U-Boot（含踩坑）",150],["把笔记发到至少一个社区，记录反馈",150],["预习 W8：dts 的节点、属性、phandle",90],["读 i.MX6ULL 板级 dts，标出每个顶层节点的作用",90,"D"]],"录音 + 公开笔记"]
+]},
+{w:8,s:"阶段 3 · 系统构建",t:"内核编译与设备树",g:"设备树是 BSP 的核心语言。这周之后，改硬件配置对你来说就是改文本。",days:[
+ ["内核结构与编译",[["摸清 arch / drivers / include / kernel 各目录职责",110],["编译 zImage + dtb，确认产物齐全",50],["理解 dtsi 的包含关系，画出包含树",100],["用 menuconfig 找选项，在 .config 里找到对应行并说明 Kconfig 语法",60],["读 Kconfig 的 depends on 与 select，说明 select 为什么会制造麻烦",50,"D"]],"完整编译产物"],
+ ["dts 语法",[["节点、属性、label、phandle、status、#address-cells",110],["读懂板级 dts，说出每个顶层节点的作用",50],["给已有节点加自定义属性，在代码里读出来",100],["读 of_ 系列 API 头文件，列出你会用到的 6 个",60],["读 drivers/of/base.c 的 of_property_read_u32，说明属性怎么从 dtb 取出",50,"D"]],"dts 逐节注释"],
+ ["双板对比",[["打开 RK3568 的 dts，找同名节点（uart2 / i2c1 / gpio-keys）",110],["列差异表：fsl,imx6ull-* 与 rockchip,rk3568-* 写法差别",50],["说明为什么 dts 是通用描述而不是某家私有格式",100],["读 Documentation/devicetree/bindings 下任意一个 binding 文档",60],["用 Python 解析 dts 文本并输出节点树，练文本处理",50,"B"]],"双板差异表"],
+ ["改设备树",[["改 LED 节点的 GPIO 编号，重编 dtb 烧写观察",110],["故意写错引脚号，记录系统表现（不亮 / 报错 / 无反应）",50],["加一个 gpio-leds 节点，不写驱动实现呼吸灯",100],["读 dtc 报错信息，学会定位到具体行",60],["读 drivers/leds/leds-gpio.c，说明为什么只写 dts 就能工作",50,"D"]],"现象改变 + 故障记录"],
+ ["启动日志与耗时",[["从 Uncompressing 到 init，逐段标注在做什么",110],["找出耗时最长的三行日志，估算各占多少毫秒",50],["用 bootgraph 或 initcall_debug 打印各阶段耗时",100],["读 init/main.c 的 kernel_init，找到 init 进程怎么被拉起",60],["用 C++ 写日志解析器，把 dmesg 按阶段归类并算耗时",50,"B"]],"日志逐段注释 + 耗时表"],
+ ["裁剪与优化",[["裁掉无用文件系统与驱动，测启动时间变化",180],["对比裁剪前后瓶颈是否转移",150],["写一篇设备树入门笔记，目标是让新手看懂",150],["列回归清单，确认裁剪后功能都还在",90],["读 kernel/params.c 与 __setup 宏，说明内核参数怎么生效",90,"D"]],"裁剪数据 + 入门笔记"],
+ ["周验收",[["闭卷画 dts 结构树并解释 phandle 怎么工作",180],["写公开笔记：设备树到底解决了什么问题",150],["预习 W9：Buildroot 与 Yocto 的区别",150],["检查淘汰线进度：五条里现在能过几条",90],["读 Documentation/devicetree/usage-model.rst，写 300 字摘要",90,"D"]],"笔记 + 自评"]
+]},
+{w:9,s:"阶段 3 · 系统构建",t:"rootfs：Buildroot 与 Yocto",g:"这周之后，你手上是一套「自己从源码长出来的系统」，而不是厂商给的镜像。面试问 rootfs 怎么来的，你能讲 10 分钟。",days:[
+ ["Buildroot 基础",[["配置工具链、busybox、需要的库，编译最小 rootfs",110],["烧到板子启动，确认能进 shell",50],["加一个 package，把你的工程打进 rootfs",100],["读 Buildroot 的 package 机制，说明 .mk 文件怎么写",60],["读 Buildroot 顶层 Makefile，说明它怎么下载 / 打补丁 / 编译 / 安装",50,"D"]],"能启动的 rootfs"],
+ ["rootfs 组成",[["FHS 目录结构、/etc 配置、/dev 与 /sys 挂载",110],["busybox init 与 systemd 的区别，各配一个服务",50],["静态链接 vs 动态链接的 rootfs，体积与依赖对比",100],["读 /etc/inittab 与启动脚本，说清启动顺序",60],["写一个 systemd service，让应用开机自启、崩溃自动重启",50,"B"]],"服务自启成功"],
+ ["Yocto 概念",[["layer / recipe / bbappend / 变量覆盖，四者的关系",110],["建立自己的 layer，改一个现有 recipe",50],["编译 core-image-minimal，找到产出目录",100],["拆解一份 .bb 文件，逐个关键字说明作用",60],["读 Yocto 的 sstate 机制，说明第二次编译为什么快那么多",50,"D"]],"自己的 layer"],
+ ["Yocto 实战",[["加一个自己的 recipe（hello + systemd service）",110],["用 devtool 修改源码并 rebuild",50],["生成 SDK 并用它交叉编译你的工程",100],["读 bblayers.conf 与 local.conf 的关键配置项",60],["把 W3 的工程做成 recipe 加进镜像",50,"B"]],"自定义 recipe 生效"],
+ ["镜像与烧写",[["wic / ext4 / ubifs 三种格式的适用场景",110],["用 wic 生成可烧写的 SD 卡镜像并启动",50],["加只读 rootfs + overlayfs 可写层",100],["读 wks 文件，说明分区布局怎么定义",60],["读 Yocto 的 kernel recipe，说明内核配置 fragment 怎么合并",50,"D"]],"SD 卡镜像可启动"],
+ ["大实验",[["从零构建完整镜像：内核 + dtb + rootfs + 你的驱动 + 自启服务",180],["记录构建耗时与产物体积，做成一张表",150],["写「Buildroot vs Yocto」对比笔记，含选型建议",150],["归档所有配置文件，逐条写清为什么这么改",90],["读 Yocto 的 image 类，说明 IMAGE_INSTALL 怎么决定装什么",90,"D"]],"完整镜像 + 选型笔记"],
+ ["周验收",[["讲 3 分钟：rootfs 从源码到跑起来要几步，录音",180],["写公开笔记：第一次手搓 rootfs 踩的坑",150],["预习 W10：RK3568 SDK 的目录结构",150],["测试：断电重启后系统能否自动恢复",90],["读 Documentation/filesystems/overlayfs.rst，说明只读根怎么实现",90,"D"]],"录音 + 公开笔记"]
+]},
+{w:10,s:"阶段 3 · 系统构建",t:"换板复现与第二条淘汰线",g:"同样的流程，换一套 SDK 重走一遍。这一步能拆穿「你到底会不会」和「你只会抄这一家的教程」。",days:[
+ ["SDK 摸底",[["摸清 RK3568 SDK 目录：buildroot / kernel / u-boot / device / external",110],["读 ./build.sh 脚本，找出它到底做了什么",50],["不用一键脚本，单独编 U-Boot 和 kernel",100],["读 SDK 的板级 config，说明配置在哪一层",60],["读 build.sh 的分支逻辑，列出它能编哪几种镜像",50,"D"]],"SDK 结构图"],
+ ["复现启动",[["用 SDK 编出镜像并烧写，进系统",110],["把 bootargs 改成从 NFS 启动",50],["改 dts 里的 uart2 引脚，验证生效",100],["对比两家 dts 的 pinctrl 写法差异",60],["做一份「两套 SDK 对照表」，面试可以直接讲",50,"B"]],"NFS 启动成功 + 对照表"],
+ ["内核源码对比",[["两家内核版本、补丁集、配置差异",110],["用 diff 对比同一驱动在两家的实现",50],["找一家私有驱动（如 rockchip 的 DRM），说明它改了什么",100],["读 vendor 分支的提交记录，看厂商怎么维护",60],["读 Rockchip 的 clk 驱动，说明它和 mainline 的差异",50,"D"]],"驱动差异清单"],
+ ["淘汰线 2 准备",[["在 RK3568 上从零走：编译 → 烧写 → 启动 → 改 dts → 验证",110],["计时，看能不能压进三天",50],["对着 RK3568 讲一遍上电到 shell 的链路",100],["补上两家平台差异的笔记",60],["用 Python 写烧写 + 串口验证的自动化脚本",50,"B"]],"全流程计时"],
+ ["外部模块",[["交叉编译外部模块：make -C 内核路径 M=$PWD",110],["处理 vermagic 不匹配，说明它校验的是什么",50],["加 module_param 并在 /sys/module 下观察",100],["读 module.h，说明 MODULE_LICENSE 缺失会怎样",60],["读 kernel/module/main.c 的 load_module，说清加载流程",50,"D"]],"外部模块可加载"],
+ ["淘汰线 2 自评",[["换一台机器或清缓存，全新环境从零复现一次",180],["写一份 5 页「平台移植 checklist」",150],["录 5 分钟视频：讲清两家平台的启动差异",150],["复盘：哪一步最慢，为什么",90],["读 Documentation/kbuild/modules.rst，说明外部模块构建机制",90,"D"]],"checklist + 视频"],
+ ["周验收",[["闭卷写出外部模块的 Makefile 与 Kbuild，并解释每个变量",180],["写公开笔记：换一块板子重走一遍，我发现了什么",150],["预习 W11：字符设备的注册流程",150],["淘汰线 2 结论：过了没有",90],["读 fs/char_dev.c，说明 cdev_add 怎么把设备号映射到操作函数",90,"D"]],"淘汰线 2 结论"]
+]},
+{w:11,s:"阶段 4 · 驱动",t:"模块与字符设备",g:"驱动阶段开始。这周你会第一次在内核态跑自己的代码，并且从用户态控制它。",days:[
+ ["模块基础",[["写 hello 模块 + Kbuild 版 Makefile，insmod / rmmod",110],["看 printk 分级，用 dmesg -l 过滤自己那条",50],["加 __init / __exit 与错误路径清理，制造一次加载失败",100],["读 module.h，说明 module_init 被展开成什么",60],["读 include/linux/device.h 的 struct device，列出 5 个关键成员",50,"D"]],"dmesg 看到自己的打印"],
+ ["字符设备",[["申请设备号（静态 / 动态），注册 cdev",110],["用 mdev 或 udev 自动创建 /dev 节点",50],["实现 open / read / write / release，处理 count 与 offset",100],["读懂 cdev_add 与设备号映射关系",60],["用 C++ 封装一层 RAII 的 /dev 访问类（构造打开、析构关闭）",50,"B"]],"/dev/mydev 出现 + C++ 封装"],
+ ["用户态数据交换",[["补上 copy_to_user / copy_from_user，处理失败返回值",110],["说明为什么不许直接 memcpy（用户态地址可能换页）",50],["测试超长写入和非法地址，看内核怎么防护",100],["读 access_ok 的实现，说明它检查什么",60],["读 uaccess.h 的整套接口，列出你以后会用到的全部",50,"D"]],"echo / cat 可用"],
+ ["ioctl",[["构造命令码：_IO / _IOR / _IOW / _IOWR 的规则与方向位",110],["实现 ioctl 设置参数，写用户态测试工具",50],["加参数校验与兼容处理（老版本命令码）",100],["读 fs/ioctl.c 的分发逻辑，说明怎么到你的 unlocked_ioctl",60],["用 Python 的 fcntl.ioctl 调你的驱动，验证命令码",50,"B"]],"用户态工具 + Python 调用"],
+ ["sysfs 与 debugfs",[["用 kobject / attribute 在 /sys 下暴露可读写属性",110],["读 sysfs 的 show / store 回调签名，说明长度参数为什么那么定",50],["加 debugfs 节点，输出内部状态与统计",100],["读 Documentation/filesystems/sysfs.rst，说明什么该放 sysfs",60],["读 drivers/base/core.c 的 device_add，看属性怎么被创建",50,"D"]],"两条调试通路"],
+ ["集成与压测",[["驱动 + 应用 + 自启服务整合进 rootfs，上电即跑",180],["写压测程序，连续读写 10 万次看是否稳定",150],["跑 30 分钟，用 dmesg 检查有无内存泄漏告警",150],["整理代码，写一页「字符设备开发清单」",90],["用 Qt 写一个界面显示驱动状态（读 sysfs 即可）",90,"B"]],"上电即跑 + Qt 界面雏形"],
+ ["周验收",[["闭卷再写一遍字符设备（不看上一版），对比差异",180],["写公开笔记：从 insmod 到 /dev 节点出现，中间发生了什么",150],["预习 W12：两个进程同时写同一个变量会发生什么",150],["读 file_operations 结构体定义，数清有多少个回调",90],["读 fs/open.c 的 do_dentry_open，说明 open 怎么找到你的 fops",90,"D"]],"独立复现成功"]
+]},
+{w:12,s:"阶段 4 · 驱动",t:"并发、锁与中断",g:"这周两个必考题：两个进程同时进来会发生什么；中断里为什么不能睡。答不出来，前面 11 周等于没学。",days:[
+ ["复现竞态",[["写带全局计数器的模块，两个进程各跑 10 万次自增",110],["观察计数错乱，记录错多少、错在哪一步",50],["写能稳定复现的测试脚本，连续跑 10 次",100],["读 atomic_t 的实现，说明它靠什么保证原子",60],["用 C++ 多线程 + 共享变量复现同样的竞态，对比两边的差别",50,"B"]],"竞态复现记录 + C++ 对照"],
+ ["锁",[["用 atomic_t 和 spinlock 分别修复，验证结果正确",110],["测临界区耗时，说明自旋锁适合什么场景",50],["改用 mutex，制造必须睡眠的临界区",100],["读 spin_lock 实现，说明它为什么不能睡眠（抢占被关）",60],["读 Documentation/locking/ 下的 lockdep 说明，学会开锁检查",50,"D"]],"三版修复对比"],
+ ["等待队列",[["实现阻塞式 read：无数据就睡，有数据唤醒",110],["两个终端验证：一个读阻塞，另一个写唤醒",50],["同时支持 O_NONBLOCK 与 poll",100],["读 wait_event_interruptible 宏展开，说明条件检查在哪一步",60],["用 Qt 定时器轮询 vs 阻塞读，对比 CPU 占用",50,"B"]],"阻塞读 + poll 可用"],
+ ["中断基础",[["request_irq、触发方式、共享中断，用按键触发点亮 LED",110],["去掉消抖看会误触发几次，记录现象",50],["上半部 / 下半部：tasklet 与 workqueue 各写一版",100],["读 request_threaded_irq 文档，说明线程化中断适合什么场景",60],["读 kernel/irq/manage.c，说明 request_irq 之后中断怎么被分发",50,"D"]],"按键中断可用"],
+ ["中断深挖",[["故意在中断里 msleep，观察 scheduling while atomic",110],["故意在中断里大量拷贝，看系统卡多久",50],["用 hrtimer 做 1ms 周期，GPIO 翻转 + 示波器测抖动",100],["读中断处理流程：向量表 → do_IRQ → 你的 handler",60],["读 Documentation/timers/ 下 hrtimer 文档，说明高精度定时器怎么实现",50,"D"]],"违规现场 + 抖动数据"],
+ ["破坏性测试",[["故意删掉一把自旋锁，跑压测看系统多久崩",180],["故意少一个 put_device 或 kfree，观察内存泄漏",150],["用 lockdep 跑一遍，看它报什么",150],["把三种崩溃现场整理成「内核异常图鉴」",90],["用 Qt 把驱动上报的计数器画成曲线（跨进程数据可视化）",90,"B"]],"崩溃现场 + 异常图鉴"],
+ ["周验收",[["闭卷写一个带自旋锁保护的字符设备，能通过并发压测",180],["写公开笔记：中断里为什么不能睡眠（含实验）",150],["预习 W13：platform driver 为什么存在",150],["读 Documentation/driver-api/driver-model 目录",90],["读 driver_probe_device，说明 probe 被谁调用、什么时机",90,"D"]],"并发压测通过"]
+]},
+{w:13,s:"阶段 4 · 驱动",t:"platform 驱动与设备模型",g:"现代 Linux 驱动几乎都长这样：dts 描述硬件，驱动只负责匹配和初始化。这周把这个模式刻进肌肉。",days:[
+ ["platform 基础",[["platform_device / platform_driver 结构，注册与注销",110],["把 W11 的字符设备改成 platform driver",50],["用 module_platform_driver 宏简化，说明它展开成什么",100],["读 platform_bus_type 的定义，说明总线怎么匹配",60],["读 drivers/base/platform.c 的 platform_match，逐条解释匹配优先级",50,"D"]],"platform 版字符设备"],
+ ["设备模型",[["bus / device / driver / class 四者关系，画图",110],["在 /sys/bus/platform 下观察 devices 与 drivers 的绑定",50],["手动 unbind / bind，看 probe 与 remove 被调用",100],["读 kobject 与 kset，说明引用计数怎么工作",60],["读 really_probe 的调用链，画出完整时序图",50,"D"]],"设备模型关系图"],
+ ["dts 匹配",[["compatible 字符串规则，of_match_table 怎么写",110],["在 dts 里加节点，验证 probe 被调用",50],["改 compatible 制造匹配失败，看内核日志",100],["读 of_match_device 与 of_device_get_match_data",60],["用 Python 模板生成一份 dts 片段，练文本生成",50,"B"]],"probe 成功 + 失败对照"],
+ ["devm 与资源管理",[["devm_kzalloc / devm_ioremap / devm_request_irq 全套",110],["在 probe 中途 return 错误，验证资源被自动释放",50],["对比手写 goto 清理与 devm 两种风格",100],["读 devres.c，说明资源挂在哪、什么时候释放",60],["读 devm 的 group 机制，说明 devm_add_action_or_reset 的用途",50,"D"]],"两种风格对照"],
+ ["多实例与私有数据",[["一个驱动支持两块同型号设备，取不同地址",110],["用 platform_set_drvdata 存私有结构",50],["并发打开两个实例，验证数据不串",100],["读 container_of 在 probe 里的典型用法",60],["C++ 用单例 + 工厂重构用户态工具，支持多设备",50,"B"]],"双实例同时工作"],
+ ["大实验",[["字符设备完整改写成 platform driver + dts 匹配 + devm",180],["加 remove 路径，unbind / bind 循环 20 次不出错",150],["整理「platform driver 模板」，以后新驱动直接套",150],["画一张 probe 调用链图，写进笔记",90],["读 drivers/base/dd.c 全文，说明 deferred probe 解决什么",90,"D"]],"驱动模板 + 循环测试"],
+ ["周验收",[["闭卷写一个 platform driver 骨架（probe/remove/of_match 齐全）",180],["写公开笔记：platform driver 到底解决了什么问题",150],["预习 W14：I2C 客户端驱动和 platform 驱动差在哪",150],["测试驱动能否反复绑定解绑不出警告",90],["读 Documentation/driver-api/driver-model/overview.rst",90,"D"]],"骨架 + 公开笔记"]
+]},
+{w:14,s:"阶段 4 · 驱动",t:"I2C、regmap 与传感器",g:"这周是驱动阶段的核心：从手册到寄存器，从寄存器到用户态可读的数据。面试最常让你讲的「一个驱动怎么做出来的」，就是这周。",days:[
+ ["I2C 客户端驱动",[["i2c_driver / i2c_client / i2c_device_id，注册与匹配",110],["在 dts 的 i2c 节点下加设备，验证 probe",50],["用 i2c_transfer 读一个寄存器并打印",100],["读 i2c_smbus_* 系列接口，说明各自适用场景",60],["读 i2c-core-base.c 的 i2c_device_probe，说明适配过程",50,"D"]],"寄存器读出来了"],
+ ["regmap",[["regmap_config：寄存器位宽、值位宽、缓存策略",110],["用 regmap 重写读写，打开 debugfs 看缓存",50],["对比裸 i2c_transfer 与 regmap 的代码量",100],["读 regmap 的 cache 机制，说明什么时候该开",60],["读 drivers/base/regmap/regmap.c 的核心路径",50,"D"]],"regmap 版驱动"],
+ ["中断型传感器",[["读传感器手册：寄存器地图、量程、数据就绪中断",110],["配中断引脚，request_threaded_irq 里读数据",50],["用内核 FIFO 或 IIO 缓冲缓存数据",100],["处理 I2C 读失败的重试与超时",60],["Python 写数据采集脚本并存 CSV",50,"B"]],"中断触发采样"],
+ ["input 子系统",[["input_dev、input_event、EV_KEY / EV_ABS",110],["写按键 input 驱动，用 evtest 验证",50],["加软件消抖与长按判定",100],["读 input 子系统的上报流程",60],["读 drivers/input/input.c 的 input_event，说明事件怎么到 evdev",50,"D"]],"evtest 能看到事件"],
+ ["IIO 子系统",[["IIO 的 channel 描述、scale、raw 与 processed",110],["把传感器改成 IIO 驱动，用 iio_info 看通道",50],["用 iio_generic_buffer 读连续采样",100],["读 IIO 的 buffer 与 trigger 机制",60],["读 industrialio-core.c 的 channel 注册",50,"D"]],"IIO 通道可见"],
+ ["大实验",[["完整传感器驱动：dts + probe + regmap + 中断 + IIO",180],["连续采样 1 小时，检查连续性、丢包、漂移",150],["用示波器对照中断频率与采样率",150],["写驱动使用文档（给应用工程师看）",90],["Qt 界面实时显示传感器数据（读 IIO sysfs）",90,"B"]],"1 小时数据 + Qt 界面"],
+ ["周验收",[["闭卷写一个 I2C 客户端驱动骨架 + regmap 读写",180],["写公开笔记：I2C 驱动从 dts 到用户态的完整链路",150],["预习 W15：为什么有些驱动不该写字符设备",150],["检查采样数据有无漂移或断流",90],["读 Documentation/i2c/writing-clients.rst",90,"D"]],"骨架 + 公开笔记"]
+]},
+{w:15,s:"阶段 4 · 驱动",t:"子系统驱动与第三条淘汰线",g:"上周你学会了「怎么读一个芯片」，这周学「该把它接到内核的哪个子系统」。这是初级和中级驱动工程师的分水岭。",days:[
+ ["GPIO / LED / PWM",[["gpio 子系统：gpiod_get / gpiod_set_value",110],["用 leds 子系统注册 LED，sysfs 控制亮度",50],["PWM 子系统：申请通道、设周期与占空比，驱动背光或蜂鸣器",100],["读 gpiod 的 descriptor 机制，说明为什么取代整数编号",60],["读 drivers/gpio/gpiolib.c 的 gpiod_get 路径",50,"D"]],"三套子系统各跑一个"],
+ ["RTC / watchdog / misc",[["RTC 驱动：读时间、设闹钟、掉电保持",110],["watchdog：喂狗、超时复位，故意不喂看系统重启",50],["misc 设备：一个次设备号搞定简单驱动",100],["读 watchdog 子系统框架与 ioctl 接口",60],["Python 用 ioctl 调 RTC 与 watchdog，做一个小工具",50,"B"]],"喂狗与复位验证"],
+ ["电源管理",[["runtime PM：get / put / autosuspend",110],["让设备进入 suspend，测电流变化",50],["system suspend / resume 回调，配置唤醒源",100],["读 PM 文档，说明 runtime PM 与 system PM 的关系",60],["读 drivers/base/power/runtime.c 的状态机",50,"D"]],"电流实测 + 唤醒测试"],
+ ["驱动选型",[["对比：字符设备 vs input vs IIO vs leds vs hwmon",110],["同一传感器用两种方式实现，比较用户态接口",50],["说明为什么内核不允许「什么都自己造一个 /dev」",100],["读 Documentation/driver-api 下的子系统清单",60],["写一份「驱动选型表」：什么硬件该进哪个子系统",50,"B"]],"选型表"],
+ ["淘汰线 3 准备",[["从零写：platform + dts + I2C 传感器 + 用户态接口（不看旧代码）",110],["检查：devm、错误路径、并发保护是否齐全",50],["补 remove 与模块卸载后的资源清理",100],["写三个测试：正常、超时、设备不存在",60],["读 Documentation/process/submitting-patches.rst 前两节",50,"D"]],"代码自查表"],
+ ["淘汰线 3",[["全链路验收：dts 匹配 → probe → 中断 → 数据 → 用户态读到",180],["拔掉传感器再插上，验证错误处理与恢复",150],["录 8 分钟视频讲清整条链路（面试可直接用）",150],["自评：能不能在陌生板子上 3 天内做出同样的事",90],["把视频与代码整理成 GitHub 仓库，写清 README",90,"B"]],"8 分钟视频 + 开源仓库"],
+ ["周验收",[["闭卷画出 platform + I2C 驱动的完整调用链",180],["写公开笔记：子系统驱动存在的意义（以 LED 为例）",150],["预习 W16：MAC 与 PHY 的分工",150],["淘汰线 3 结论：过了没有",90],["读 drivers/base/power 目录，列出还没搞懂的 3 个文件",90,"D"]],"淘汰线 3 结论"]
+]},
+{w:16,s:"阶段 5 · 外设广度",t:"以太网：从 PHY 到 socket",g:"从这周开始换 RK3568。网口是 BSP 岗位 JD 里出现频率最高的外设，也是最好讲的面试题。",days:[
+ ["MAC 与 PHY",[["MAC 与 PHY 的分工、RGMII 时序、MDIO 总线作用",110],["在原理图上找到 RK3568 的 PHY 型号与 MDIO 地址",50],["用 ethtool 看链路状态、速率、双工",100],["读 PHY 寄存器 BMCR / BMSR，说明自协商过程",60],["读 drivers/net/phy/phy.c 的状态机",50,"D"]],"链路图 + PHY 地址"],
+ ["设备树与 PHY 驱动",[["dts 里 MAC 节点：phy-handle、phy-mode、时钟",110],["改 phy-mode 制造链路不通，记录现象",50],["用 mdio-tools 直接读写 PHY 寄存器",100],["读 PHY 驱动的 config_init 与 read_status",60],["Python 用 socket 写 UDP 回环测试工具",50,"B"]],"PHY 寄存器读写成功"],
+ ["收包路径",[["从网卡中断到 socket 的完整路径",110],["NAPI 与中断抑制，为什么高负载要轮询",50],["用 /proc/net/softnet_stat 看丢包与 backlog",100],["读 napi_schedule 到 net_rx_action 的流程",60],["读 net/core/dev.c 的 netif_receive_skb 路径",50,"D"]],"收包路径图"],
+ ["网络编程",[["TCP / UDP socket、阻塞与非阻塞、epoll",110],["写 echo 服务器，支持 100 并发",50],["加超时、心跳、断线重连",100],["读三次握手与 TIME_WAIT，说明服务端 TIME_WAIT 过多的原因",60],["用 paho-mqtt 把板子数据发到 broker",50,"B"]],"并发服务器 + MQTT"],
+ ["网络性能与调试",[["iperf3 测吞吐，判断瓶颈在 CPU 还是链路",110],["用 tcpdump 抓包分析一次握手",50],["调 MTU 与 offload，测吞吐变化",100],["读 ethtool -k 的 offload 项，说明哪些会骗过 tcpdump",60],["读 Documentation/networking 下一份文档（scaling 或 napi）",50,"D"]],"吞吐数据表"],
+ ["大实验",[["板子做 TCP 服务器 + 上位机客户端，传 1GB 数据校验完整性",180],["并发 50 连接跑 1 小时，记录 CPU 与丢包",150],["断网重连测试，验证应用层恢复逻辑",150],["写网络调试笔记（iperf / tcpdump / ethtool 三件套）",90],["Qt 界面 + 网络传输合起来，做远程监控 Demo",90,"B"]],"1GB 传输零错误 + 监控 Demo"],
+ ["周验收",[["闭卷讲清一个包从网线到应用层的路径",180],["写公开笔记：RGMII 与 PHY 自协商（含波形）",150],["预习 W17：USB host 与 gadget 的区别",150],["检查 1GB 传输有没有校验错误",90],["读 Documentation/networking/device_drivers 下任意一个",90,"D"]],"录音 + 公开笔记"]
+]},
+{w:17,s:"阶段 5 · 外设广度",t:"USB、CAN、SDIO",g:"JD 上写「至少三类外设」，这周凑齐后三类。CAN 是车载的入场券，USB gadget 是工业设备最爱考的点。",days:[
+ ["USB 基础",[["USB 拓扑、枚举过程、四类描述符",110],["用 lsusb -v 看一棵完整描述符树",50],["插拔 U 盘，逐行解释 dmesg 的枚举日志",100],["说明控制传输的四个阶段，各传什么",60],["读 drivers/usb/core/hub.c 的 hub_port_connect",50,"D"]],"枚举日志逐行注释"],
+ ["USB host 驱动",[["USB 设备驱动：probe / id_table / urb",110],["用 usb-storage 挂 U 盘并手动 mount",50],["写一个最简单的 USB 设备驱动（读描述符即可）",100],["读 urb 的生命周期与 completion 回调",60],["Python 用 pyusb 遍历设备树并打印描述符",50,"B"]],"自己的 USB 驱动"],
+ ["USB gadget",[["gadget 框架：UDC / configfs / function",110],["用 configfs 配一个 ACM 串口或 mass storage",50],["板子做 USB 网卡（RNDIS / ECM），与 PC 通信",100],["读 gadget 的 composite 框架",60],["读 gadget/configfs.c，说明用户态怎么配 gadget",50,"D"]],"USB 网卡通了"],
+ ["CAN",[["SocketCAN：发送、接收、过滤器",110],["配 bitrate，用 candump / cansend 收发",50],["用逻辑分析仪解出 CAN 帧，对照 candump 输出",100],["读 CAN 错误帧与 bus-off 恢复机制",60],["Python python-can 写周期发送 + 记录脚本",50,"B"]],"CAN 双向通信"],
+ ["SDIO / MMC",[["SD/eMMC 协议层次：CMD / ACMD、响应类型、总线宽度",110],["看 mmc 子系统在 sysfs 下的信息",50],["测 eMMC 读写速度，与 datasheet 对比",100],["读 mmc 的 host / card / request 三层结构",60],["读 drivers/mmc/core/core.c 的初始化流程",50,"D"]],"速度实测表"],
+ ["大实验",[["USB gadget 网卡 + CAN 收发 + eMMC 压测三件齐上",180],["记录并发时的 CPU、中断次数、延迟",150],["拔插测试各 20 次，记录失败率",150],["写「外设 bring-up checklist」",90],["Python 写多外设巡检脚本（CAN + 网络 + 存储）",90,"B"]],"巡检查询脚本 + 稳定性数据"],
+ ["周验收",[["闭卷讲 USB 枚举过程，含四类描述符",180],["写公开笔记：SocketCAN 从驱动到应用",150],["预习 W18：DRM / KMS 的分层",150],["检查三个外设的稳定性数据是否达标",90],["读 Documentation/usb 下的 gadget 文档",90,"D"]],"录音 + 公开笔记"]
+]},
+{w:18,s:"阶段 5 · 外设广度",t:"显示、摄像头、音频",g:"多媒体是面试里最能体现「你做过真项目」的部分，也是最容易讲不清的部分。这周把链路画出来。",days:[
+ ["DRM / KMS",[["分层：framebuffer / CRTC / encoder / connector / panel",110],["用 modetest 看当前显示模式",50],["点亮 MIPI DSI 屏，或改一次分辨率",100],["读 panel 驱动的 dts 绑定，解释 timing 参数",60],["读 drm_atomic.c 的 atomic commit 流程",50,"D"]],"屏点亮（或分辨率改变）"],
+ ["显示问题调试",[["花屏 / 闪屏 / 无显示的常见原因分类",110],["用示波器测 MIPI 时钟 lane",50],["改 timing 参数（porch、clock）看现象变化",100],["读 DRM 的 debugfs 输出，定位哪个环节没起来",60],["在板子上用 Qt 跑一个界面（framebuffer 或 wayland）",50,"B"]],"故障对照表 + Qt 界面"],
+ ["V4L2 摄像头",[["V4L2 框架：video_device、vb2、pipeline",110],["用 v4l2-ctl 列出格式并抓一帧",50],["接 MIPI 摄像头，跑通采集到文件",100],["读 media controller 拓扑（media-ctl -p）",60],["读 v4l2-core 的 vb2 队列机制",50,"D"]],"抓到一帧图"],
+ ["ASoC 音频",[["ASoC 三层：platform / codec / machine（dai link）",110],["用 aplay / arecord 测试播放与录音",50],["读 codec 的 dts 配置与三组时钟（mclk/bclk/lrck）",100],["读 ASoC 的 DAPM 电源管理",60],["Python 用 pyaudio 做录音 + 频谱显示",50,"B"]],"录音回放成功"],
+ ["PCIe 概念",[["PCIe 分层：TLP、lane、link training",110],["用 lspci -vv 看设备树与 BAR",50],["说明为什么 PCIe 枚举是内核做的（不是固件）",100],["读 MSI / MSI-X 中断机制",60],["读 drivers/pci/probe.c 的枚举流程",50,"D"]],"lspci 解读"],
+ ["大实验",[["采集 + 显示 + 录音同时工作",180],["测端到端延迟（采集到显示）",150],["统计掉帧丢帧，找瓶颈",150],["画一张多媒体链路拓扑图",90],["Qt 做「摄像头预览 + 拍照」界面",90,"B"]],"链路图 + 预览 Demo"],
+ ["周验收",[["闭卷画 DRM/KMS 与 V4L2 的分层图",180],["写公开笔记：一块屏从 dts 到点亮",150],["预习 W19：内核 oops 怎么读",150],["检查三类外设的延迟数据",90],["读 Documentation/gpu/drm-kms.rst",90,"D"]],"分层图 + 公开笔记"]
+]},
+{w:19,s:"阶段 6 · 调试与稳定性",t:"崩溃、内存、死锁、硬件调试",g:"这周学的是「系统坏了怎么办」。这项能力比会写驱动更稀缺——很多干了三年的人只会重启。",days:[
+ ["oops 阅读",[["oops 的字段：PC、LR、Call trace、Modules、CPU",110],["故意制造空指针解引用，读一遍完整 oops",50],["用 addr2line / gdb 把地址还原到源码行",100],["读 bug-hunting 文档，看内核要求怎么提交崩溃报告",60],["读 arch/arm/kernel/traps.c 的 die 函数，说明 oops 怎么打印出来",50,"D"]],"一份完整 oops 分析"],
+ ["内核调试器",[["kgdb + gdb 远程调试内核（串口或网络）",110],["打断点看 probe 执行，单步走一遍",50],["用 kprobe / kretprobe 打印函数参数",100],["读 kprobe 的实现原理（断点指令替换）",60],["Python 解析 oops 文本，自动提取关键字段",50,"B"]],"kgdb 连上 + kprobe 生效"],
+ ["内存问题",[["slub_debug、KASAN、kmemleak 三种武器",110],["故意制造越界与 UAF，看各自的报错措辞",50],["用 kmemleak 抓一次真实泄漏",100],["读 slab 分配器的基本结构",60],["读 mm/slub.c 的分配路径",50,"D"]],"三类内存问题定位"],
+ ["死锁与卡死",[["lockdep、hung task、RCU stall 三类报告",110],["故意造 ABBA 死锁，读 lockdep 报告",50],["用 sysrq 抓全任务栈",100],["读 Documentation/locking 下的 lockdep 说明",60],["写脚本定时采集 sysrq 栈，做成看板",50,"B"]],"死锁现场 + 报告"],
+ ["硬件级调试",[["JTAG / SWD 接 OpenOCD，读寄存器与内存",110],["在 U-Boot 阶段打断点，看 DDR 初始化",50],["用 JTAG 读崩溃现场（PC、栈、内存）",100],["说明 JTAG 与 kgdb 各自适用场景",60],["读 OpenOCD 的配置文件，说明目标芯片怎么定义",50,"D"]],"JTAG 连上并读到内存"],
+ ["大实验",[["造 5 个内核故障：oops、死锁、泄漏、UAF、hung task",180],["每个都留下完整报告与定位过程",150],["写「内核故障诊断手册」，含判断决策树",150],["录 10 分钟视频：现场定位一个 oops",90],["把诊断手册整理成公开文档并发到社区",90,"B"]],"诊断手册 + 视频"],
+ ["周验收",[["闭卷读一段陌生 oops，说出根因与修复方向",180],["写公开笔记：我是怎么定位这个 oops 的",150],["预习 W20：ftrace 能回答什么问题",150],["检查五个故障是否都能稳定复现",90],["读 Documentation/trace/ftrace.rst",90,"D"]],"自评 + 公开笔记"]
+]},
+{w:20,s:"阶段 6 · 调试与稳定性",t:"性能、启动优化、实时性",g:"这周决定你是「能让东西跑起来」还是「能让东西跑得好」。前者是初级，后者是中级。",days:[
+ ["ftrace",[["function / function_graph tracer 与 filter 用法",110],["抓一次 probe 的函数调用图",50],["用 trace_printk 在关键路径打点",100],["读 ftrace 的 ring buffer 机制",60],["读 kernel/trace/trace.c 的初始化",50,"D"]],"probe 调用图"],
+ ["perf 与 eBPF",[["perf top / record / report，找热点函数",110],["用 perf 抓一次中断风暴的现场",50],["写一个 bpftrace 脚本统计函数耗时",100],["说明 eBPF 为什么能安全地在内核里跑",60],["读 samples/bpf 下任意一个例子",50,"D"]],"热点火焰图"],
+ ["启动优化",[["用 initcall_debug 列出每个 initcall 耗时",110],["用 bootgraph 画出启动时间线",50],["三项优化：裁驱动、并行 probe、延迟加载",100],["读 async probe 机制（async_schedule）",60],["Python 脚本自动对比两次启动日志的耗时差异",50,"B"]],"优化数据表"],
+ ["实时性",[["PREEMPT_RT 做了什么：自旋锁转睡眠锁、中断线程化",110],["打补丁编内核，跑 cyclictest 测延迟",50],["对比 RT 与非 RT 的最大延迟",100],["读 PREEMPT_RT 相关文档",60],["读 kernel/sched/core.c 的调度入口，说明抢占点在哪",50,"D"]],"cyclictest 数据"],
+ ["功耗与长稳",[["量整板功耗，找出主要耗电模块",110],["用 suspend 与 cpufreq 降功耗",50],["跑 24 小时长稳，记录内存与温度曲线",100],["读 thermal 子系统的调频策略",60],["Python 写长稳脚本（采温度、内存、重启次数）",50,"B"]],"24 小时曲线"],
+ ["淘汰线 4",[["交一份启动优化报告：前后数据 + 每一步做了什么",180],["交出 oops 定位记录（W19 的成果）",150],["录 10 分钟视频：讲清你的优化方法",150],["自评：换一块陌生板子，还能不能优化",90],["读 Documentation/admin-guide/pm 下的策略文档",90,"D"]],"优化报告 + 视频"],
+ ["周验收",[["闭卷设计「启动 8 秒压到 4 秒」的完整方案",180],["写公开笔记：从 8 秒到 4 秒，我做了什么",150],["预习 W21：项目选题与需求拆解",150],["淘汰线 4 结论：过了没有",90],["读 kernel/power 目录，列出还没搞懂的机制",90,"D"]],"淘汰线 4 结论"]
+]},
+{w:21,s:"阶段 7 · 项目与出口",t:"选题、架构与最小闭环",g:"项目期四周。这是你唯一的对外证据——没有它，前 20 周的知识在面试官眼里等于零。",days:[
+ ["选题",[["两个候选：工业网关（Modbus + 4G + OTA）或车载 T-Box（CAN + 定位 + 安全启动）",110],["写需求清单：功能、接口、性能指标、验收标准",50],["画系统架构图（应用 / 服务 / 驱动 / 硬件四层）",100],["读一个开源同类项目，对比你的设计",60],["读 Documentation/process 下的接口稳定性要求，理解驱动 API 为什么不能乱改",50,"D"]],"需求文档 + 架构图"],
+ ["骨架",[["建仓库：docs / kernel / app / test / scripts，写 README",110],["Yocto layer 建起来，镜像构建脚本化",50],["定驱动与应用的接口：char dev / sysfs / socket / dbus 选型",100],["写接口文档，给三个月后的自己看",60],["定应用层 Demo 的目标形态（Qt 界面 + 远程）",50,"B"]],"仓库 + 接口文档"],
+ ["最小闭环",[["从零构建镜像，能启动并跑起空壳服务",110],["加自研驱动，probe 成功",50],["应用读到驱动的一个值",100],["写 CI 脚本：一键构建 + 冒烟测试",60],["读 systemd 的服务依赖（After / Requires / Wants）",50,"D"]],"能跑起来的第一版"],
+ ["数据通路",[["采集 → 缓存 → 上报 三段式设计",110],["断网缓存策略（本地环形缓冲 + 补传）",50],["实现最小闭环：采一个值并上报到本地服务",100],["读 MQTT 的 QoS 语义，选一个合适等级",60],["用 MQTT + Qt 做上位机接收端",50,"B"]],"数据上报成功"],
+ ["风险清单",[["列出 10 个可能失败的点：电源、时序、驱动、协议、存储",110],["给每个定一个验证方法",50],["提前做最危险的三个（比如 OTA 回滚）",100],["写风险登记表，标概率与影响",60],["读 Documentation/ABI/README，理解稳定接口的意义",50,"D"]],"风险登记表"],
+ ["第一周整合",[["完整构建 + 烧写 + 启动 + 采集 + 上报 跑通",180],["写构建与运行手册，别人能照着复现",150],["录 5 分钟 Demo 视频（第一版）",150],["复盘：哪些设计需要改",90],["写项目 README 的应用层使用说明",90,"B"]],"第一版 Demo + 手册"],
+ ["周验收",[["讲 5 分钟：解决什么问题、架构为什么这样",180],["写公开笔记：我为什么选这个题",150],["预习 W22：长稳测试怎么做",150],["检查 CI 是否真能一键跑通",90],["读 stable-api-nonsense 文档",90,"D"]],"录音 + 公开笔记"]
+]},
+{w:22,s:"阶段 7 · 项目与出口",t:"核心功能与 24 小时长稳",g:"这周你会第一次被自己的代码坑到——长稳测试专门暴露你自己想不到的问题。",days:[
+ ["协议实现",[["Modbus RTU 从站（或 CAN 报文解析）",110],["用 modbus-poll / cansend 对测",50],["加异常码与超时处理",100],["读 libmodbus 的实现思路，对比你的",60],["Python 写 Modbus 主站测试脚本",50,"B"]],"协议互通"],
+ ["配置与存储",[["配置文件设计（json / ini），支持热加载",110],["掉电不丢：临时文件 + rename + fsync",50],["配置校验与恢复默认",100],["读内核 configfs / sysfs 的配置思路",60],["读 fsync 的语义文档，说明它保证什么、不保证什么",50,"D"]],"断电不丢配置"],
+ ["升级雏形",[["A/B 双分区设计，U-Boot 环境变量切换",110],["写升级包格式（头 + 校验 + 镜像）",50],["实现升级 → 重启 → 校验 → 回滚的最小闭环",100],["读 U-Boot 的 bootcount / altboot 机制",60],["Qt 界面显示版本号与升级进度",50,"B"]],"升级能跑通"],
+ ["性能达标",[["定三个指标：启动时间、采集延迟、上报成功率",110],["逐项测量，与目标对比",50],["不达标项做优化（最多改两处）",100],["读 perf 结果，确认优化真的有效",60],["读 CFS 参数，说明 nice 与 cgroup 怎么影响延迟",50,"D"]],"指标对照表"],
+ ["测试体系",[["写 20 个自动化用例（pytest + 串口控制）",110],["加「板子挂了」与「用例失败」的区分逻辑",50],["跑全量，记录通过率",100],["读 pytest 的 fixture 与参数化",60],["用 pytest-html 生成测试报告",50,"B"]],"20 个用例 + 报告"],
+ ["24 小时长稳",[["启动 24 小时运行，每小时记录一次状态",180],["同时做：随机断电 20 次、随机拔网线 20 次",150],["统计内存增长、温度、重启次数",150],["写长稳报告",90],["Qt 做设备状态看板，显示长稳数据",90,"B"]],"长稳报告 + 看板"],
+ ["周验收",[["复盘 24 小时数据，找异常",180],["写公开笔记：长稳测试暴露的三个问题",150],["预习 W23：安全启动与 OTA 的关系",150],["检查自动化用例通过率是否 >90%",90],["读 Documentation/ABI/testing 下任意一个文件",90,"D"]],"复盘 + 公开笔记"]
+]},
+{w:23,s:"阶段 7 · 项目与出口",t:"破坏性测试、安全启动与文档",g:"这周做的是「把项目弄坏」。能被弄坏还能恢复的系统，面试官才信。",days:[
+ ["断电与文件系统",[["100 次随机断电（脚本控继电器或手动拔）",110],["检查文件系统损坏、只读挂载、内核日志",50],["加 fsck 与只读 rootfs 保护",100],["读 ext4 的 journal 与 data=ordered 语义",60],["读 Documentation/filesystems/ext4 的 journal 部分",50,"D"]],"断电 100 次记录"],
+ ["安全启动",[["信任链：ROM → SPL → U-Boot → kernel → rootfs",110],["用 HAB 或 FIT 签名，验证签名失败会怎样",50],["开 secure boot 后测一次正常启动",100],["读 U-Boot 的 FIT 镜像格式",60],["读 Documentation/security 下的 IMA / EVM 文档",50,"D"]],"签名验证通过/失败两侧"],
+ ["OTA 与回滚",[["A/B 分区 + 校验 + 回滚完整实现",110],["制造「升级包损坏」，验证能回滚",50],["制造「升级中断电」，验证能恢复",100],["读 swupdate / RAUC 的设计思路",60],["写升级脚本（服务端 + 客户端），能远程触发",50,"B"]],"三种失败都能恢复"],
+ ["可靠性加固",[["watchdog + 心跳 + 自动重启",110],["内存泄漏长期监控（/proc/meminfo 曲线）",50],["日志轮转与落盘策略",100],["读 logrotate / journald 的配置",60],["读 Documentation/watchdog 的框架说明",50,"D"]],"自恢复验证"],
+ ["文档",[["写硬件接口说明（引脚、电平、时序）",110],["写软件架构与模块职责",50],["写部署与运维手册",100],["写测试报告（用例、通过率、已知问题）",60],["把文档做成静态站点（mkdocs）",50,"B"]],"四份文档"],
+ ["破坏性测试大集合",[["高低温（吹风机 + 冰箱）各跑 2 小时",180],["电压拉偏 ±10%，看是否稳定",150],["网络丢包 30%，看协议表现",150],["汇总所有破坏性测试结果",90],["把结果做成图表放进文档",90,"B"]],"测试汇总表"],
+ ["周验收",[["讲 8 分钟：这个项目最难的三个点",180],["写公开笔记：断电 100 次之后我改了什么",150],["预习 W24：简历怎么写",150],["检查所有破坏性测试是否都有记录",90],["读提交规范与社区行为准则",90,"D"]],"8 分钟录音"]
+]},
+{w:24,s:"阶段 7 · 项目与出口",t:"演示、简历、面试、投递",g:"最后一周不是学技术，是把你 23 周的成果变成别人能看见的东西。做不好这周，前面的努力会打折。",days:[
+ ["演示视频",[["写脚本：3 分钟版（给 HR）与 10 分钟版（给技术）",110],["录 3 分钟版",50],["录 10 分钟版（含代码讲解）",100],["剪掉废话，加字幕",60],["做一页项目介绍图（架构 + 亮点）",50,"B"]],"两个版本的视频"],
+ ["简历",[["一页纸，三段式：技能、项目、经历",110],["项目描述用 STAR，全部带量化数据",50],["针对六个出口各改一版关键词",100],["找 3 个人帮你看简历",60],["做一份「应用层方向」的简历版本",50,"B"]],"2–3 版简历"],
+ ["项目问答",[["整理 30 个可能被问的问题与你的答案",110],["每个答案控制在 90 秒内",50],["录音自听，改掉口头禅与「然后」",100],["读目标公司 JD，把关键词对到你的项目",60],["复习 W10 的两家平台差异，这是高频题",50,"D"]],"30 问答案卡"],
+ ["模拟面试",[["找朋友或线上模拟一次 BSP 方向面试",110],["记录被问住的问题",50],["补那三个知识点",100],["再模拟一次，验证进步",60],["再模拟一次应用 / 测试方向的面试",50,"B"]],"两次模拟记录"],
+ ["投递",[["锁定 30 家：BSP 15 + 保底 15，列联系人",110],["写好邮件模板与打招呼语",50],["投 10 家，记录反馈",100],["逐条对 JD 调关键词",60],["在开源社区发一次「项目 + 求职」贴",50,"B"]],"投递记录表"],
+ ["收尾",[["整理仓库：代码、文档、视频、报告统一入口",180],["写 24 周复盘：做对了什么、哪里浪费了",150],["整理 24 篇公开笔记的索引",150],["定下一步计划（补短板 or 深挖方向）",90],["把项目放到个人主页或 GitHub Pages",90,"B"]],"作品集入口"],
+ ["最后验收",[["当面演示一次，能给外行讲明白算过",180],["检查：断电、断网、升级失败三种情况都能恢复",150],["自评五条淘汰线",150],["写最后一篇公开笔记：24 周我到底学到了什么",90],["列出未来一年要读的 5 份内核文档",90,"D"]],"最终交付"]
+]}
+];
+
+// ---------- 渲染 ----------
+const weeksEl = document.getElementById('weeks');
+const chipsEl = document.getElementById('chips');
+const fillEl = document.getElementById('fill');
+const doneEl = document.getElementById('done');
+const totalEl = document.getElementById('total');
+const KEY = 'bsp-plan-v2';
+
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { saved = {}; }
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const frag = document.createDocumentFragment();
+const chips = [];
+
+PLAN.forEach(function(wk, wi){
+  const sec = document.createElement('section');
+  sec.className = 'week';
+  sec.id = 'w' + wk.w;
+
+  let dayHtml = '', taskCount = 0, minTotal = 0;
+  wk.days.forEach(function(d, di){
+    const id = 'd' + wk.w + '-' + di;
+    let mins = 0, tasks = '';
+    d[1].forEach(function(t, ti){
+      mins += t[1]; taskCount++;
+      const tid = id + '-' + ti;
+      const ck = saved[tid] ? ' checked' : '';
+      const tg = t[2] ? '<span class="ttag ' + t[2] + '">' + (t[2] === 'D' ? '深' : '保') + '</span>' : '';
+      tasks += '<li><input type="checkbox" id="' + tid + '" data-k="' + tid + '"' + ck + '>' +
+        '<label for="' + tid + '">' + esc(t[0]) + '</label>' + tg +
+        '<span class="m">' + t[1] + '′</span></li>';
+    });
+    minTotal += mins;
+    const isWeekend = di >= 5;
+    dayHtml += '<div class="day" data-day="' + (wi*7+di) + '">' +
+      '<div class="dow' + (isWeekend?' sun':'') + '">' + DOW[di] + '</div>' +
+      '<div><p class="dhead">' + esc(d[0]) + '<span class="dmin">' + (Math.round(mins/6)/10) + ' h</span></p>' +
+      '<ul class="dtasks">' + tasks + '</ul>' +
+      '<div class="dout">' + esc(d[2]) + '</div></div></div>';
+  });
+
+  sec.innerHTML =
+    '<div class="wk-head">' +
+      '<div class="wk-n"><b>W' + wk.w + '</b><span>第 ' + wk.w + ' 周</span></div>' +
+      '<div class="wk-t"><h3>' + esc(wk.t) + '</h3>' +
+        '<div class="meta"><span class="tagstage">' + esc(wk.s) + '</span>' +
+        '<span>' + taskCount + ' 项任务</span><span>任务 ' + (Math.round(minTotal/6)/10) + ' h</span></div>' +
+      '</div>' +
+      '<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+    '</div>' +
+    '<p class="wk-goal">' + esc(wk.g) + '</p>' +
+    '<div class="wk-body">' + dayHtml + '</div>';
+
+  sec.querySelector('.wk-head').addEventListener('click', function(){ sec.classList.toggle('open'); });
+  frag.appendChild(sec);
+
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip';
+  chip.textContent = 'W' + wk.w;
+  chip.addEventListener('click', function(){
+    sec.classList.add('open');
+    sec.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  chips.push(chip);
+  chipsEl.appendChild(chip);
+});
+weeksEl.appendChild(frag);
+
+const all = Array.prototype.slice.call(document.querySelectorAll('.dtasks input'));
+
+function update(){
+  let n = 0;
+  all.forEach(function(b){ if (b.checked) n++; });
+  fillEl.style.width = (all.length ? n / all.length * 100 : 0) + '%';
+  doneEl.textContent = n;
+  totalEl.textContent = all.length;
+
+  const state = {};
+  all.forEach(function(b){ if (b.checked) state[b.dataset.k] = 1; });
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+
+  document.querySelectorAll('.week').forEach(function(sec, i){
+    const boxes = sec.querySelectorAll('.dtasks input');
+    let c = 0;
+    boxes.forEach(function(b){ if (b.checked) c++; });
+    const chip = chips[i];
+    if (chip) chip.classList.toggle('done-w', boxes.length > 0 && c === boxes.length);
+  });
+}
+all.forEach(function(b){ b.addEventListener('change', update); });
+
+document.getElementById('expandAll').addEventListener('click', function(){
+  const anyClosed = Array.prototype.some.call(document.querySelectorAll('.week'), function(s){ return !s.classList.contains('open'); });
+  document.querySelectorAll('.week').forEach(function(s){ s.classList.toggle('open', anyClosed); });
+  this.textContent = anyClosed ? '收起全部' : '展开全部';
+});
+
+// ---------- 开学日 ----------
+(function(){
+  const startEl = document.getElementById('start');
+  const hintEl = document.getElementById('startHint');
+  const nowbar = document.getElementById('nowbar');
+
+  function nextMonday(){
+    const d = new Date(); const day = d.getDay();
+    d.setDate(d.getDate() + ((day === 1) ? 0 : (8 - day) % 7));
+    return d;
+  }
+  function fmt(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  const startVal = localStorage.getItem('bsp-start') || fmt(nextMonday());
+  startEl.value = startVal;
+
+  function locate(){
+    const s = new Date(startEl.value + 'T00:00:00');
+    if (isNaN(s.getTime())) { hintEl.textContent = '日期无效'; return; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.floor((today - s) / 86400000);
+    document.querySelectorAll('.day').forEach(function(el){ el.classList.remove('today'); });
+    document.querySelectorAll('.week').forEach(function(el){ el.classList.remove('today-w'); });
+    chips.forEach(function(c){ c.classList.remove('today'); });
+
+    if (diff < 0) { hintEl.textContent = '还有 ' + (-diff) + ' 天开始'; nowbar.classList.remove('on'); return; }
+    if (diff >= TOTAL_DAYS) { hintEl.textContent = '计划已结束 ' + (diff - TOTAL_DAYS + 1) + ' 天'; nowbar.classList.remove('on'); return; }
+
+    const wi = Math.floor(diff / 7), di = diff % 7;
+    hintEl.textContent = '今天是第 ' + (diff + 1) + ' 天 / W' + (wi + 1) + ' ' + DOW[di];
+    const wk = document.getElementById('w' + (wi + 1));
+    if (wk) {
+      wk.classList.add('open', 'today-w');
+      const dayEl = wk.querySelectorAll('.day')[di];
+      if (dayEl) dayEl.classList.add('today');
+      chips[wi].classList.add('today');
+    }
+    const d = PLAN[wi].days[di];
+    nowbar.classList.add('on');
+    nowbar.innerHTML = '<b>今天 · W' + (wi+1) + ' ' + DOW[di] + ' · ' + esc(d[0]) + '</b>' +
+      '<div class="nt">' + d[1].map(function(t){
+        return '<div>· ' + esc(t[0]) + ' <span style="opacity:.6">' + t[1] + '′</span></div>';
+      }).join('') + '</div>' +
+      '<div class="nt" style="opacity:.85">今日产出：' + esc(d[2]) + '</div>';
+  }
+  startEl.addEventListener('change', function(){ localStorage.setItem('bsp-start', startEl.value); locate(); });
+  locate();
+  if (!document.querySelector('.week.open')) {
+    const w1 = document.getElementById('w1');
+    if (w1) w1.classList.add('open');
+  }
+})();
+
+update();
+</script>
+</body>
+</html>

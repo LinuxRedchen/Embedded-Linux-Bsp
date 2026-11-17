@@ -1,0 +1,44 @@
+# ===== 编译中间文件与产物 =====
+*.o
+*.d
+*.elf
+*.a
+*.so
+*.out
+*.map
+*.elf.map
+*.ko
+*.mod
+*.mod.c
+*.cmd
+*.symvers
+*.order
+.tmp_versions/
+
+# ===== 各练习目录里编译出来的可执行文件（原本没有扩展名）=====
+practice/**/test
+practice/**/TestApp
+practice/**/AppTest
+practice/**/app
+practice/fileio/**/open
+practice/fileio/**/write
+practice/fileio/**/read
+practice/fileio/**/insert
+
+# ===== 程序运行时生成的数据文件 =====
+practice/fileio/**/123123
+practice/fileio/02_writeProc/2-2_中途写入函数/6
+
+# ===== 原始压缩包：仓库里不放二进制备份 =====
+*.zip
+*.tar.gz
+*.7z
+
+# ===== 编辑器与系统文件 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
