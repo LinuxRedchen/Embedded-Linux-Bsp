@@ -1,0 +1,82 @@
+# BSP‑C进阶练习｜packed、非对齐访问、W1C+W1S混合、脉冲只写位
+
+> 
+> 考察点：结构体对齐、`__attribute__((packed))`副作用(非对齐访问)、RW/RO/W1C/W1S、脉冲只写位、RMW危险场景、volatile、保留占位、位运算
+> 外设基地址：**0x52001000**
+
+| 偏移 | 寄存器 | 位宽 | 属性 | 功能描述 |
+| --- | --- | --- | --- | --- |
+| 0x00 | CTRL | 32bit | RW | bit0：模块电源使能(1开启，0关闭)   bit1‑3：预分频因子，3bit，取值0‑7   bit8：软件复位脉冲位，**只写；写1触发复位，读返回0** |
+| 0x04 | CFG8 | 8bit | RW | 8位配置寄存器；bit0使能错误上报 |
+| 0x05 | STAT16 | 16bit | RO | **硬件固定偏移0x05(奇数地址)**；bit2：错误标志；bit7：数据就绪标志；软件写无效 |
+| 0x07 | RSV | 8bit | ‑ | 1字节硬件保留；结构体必须占位，禁止软件读写 |
+| 0x08 | EVENT_SET | 32bit | W1S | W1S：写1置起事件，写0无动作；bit0：生成软件事件；禁止RMW读改写 |
+| 0x0C | EVENT_CLR | 32bit | W1C | W1C：写1清除事件，写0无动作；bit0清除软件事件；禁止RMW读改写 |
+
+> 
+> ⚠️核心陷阱梳理
+
+1. `STAT16`硬件偏移0x05奇数地址。不加`packed`，GCC默认自然对齐，uint16_t要求2字节对齐；CFG8之后插入1字节padding，STAT16偏移变成0x06，硬件错位。**本题结构体必须加`__attribute__((packed))`；引入非对齐访问风险**。
+2. CTRL bit8是**脉冲只写位**：写1生效；硬件写完自动清零；不能RMW读改写CTRL来置这个bit；一旦RMW，读出来bit8永远是0，再写回去永远无法产生复位脉冲。
+3. W1S/W1C寄存器：禁止RMW读改写；需要动作直接输出固定掩码。
+4. packed风险：直接访问`STAT16`(uint16_t，0x05奇数地址)会产生非对齐访问；部分ARM开启非对齐异常直接HardFault。
+
+##约束条件
+1.允许头文件：`<stdint.h>`、`<stdbool.h>`；禁止stdio/printf；
+2.寄存器结构体整体修饰 `__attribute__((packed))`；每一个成员添加`volatile`；**严禁C位域，全部手动位运算**；
+3.保留RSV成员不可删除；
+4.宏定义外设基地址，注意宏表达式完整括号；
+5.上层保证入参合法，函数内部不实现入参校验；
+
+###实现7个函数
+
+1. `void module_power_switch(bool en)`
+
+> 
+> 修改CTRL寄存器bit0；en=true打开模块电源；en=false关闭模块电源；其余位保持不变
+2. `void set_prescaler(uint8_t div_val)`
+
+> 
+> div_val范围0‑7；修改CTRL bit1‑3预分频因子；其余位维持原值不变
+3. `void module_soft_reset(void)`
+
+> 
+> CTRL bit8脉冲只写位；写1触发软件复位；**禁止RMW读改写CTRL寄存器**；只操作bit8，其它位不产生动作
+4. `void cfg8_enable_err_report(bool en)`
+
+> 
+> 修改CFG8寄存器bit0；en=true开启错误上报；en=false关闭错误上报；CFG8其余位保持原值不变
+5. `bool get_err_and_ready(bool *data_rdy_out)`
+
+> 
+> 读取STAT16；
+> 
+> 
+> - bit2错误标志作为返回值：错误标志为1返回true，否则返回false；
+> - bit7数据就绪标志，把该标志写入输出参数`*data_rdy_out`；
+> 仅做读操作，不修改硬件
+6. `void generate_software_event(void)`
+
+> 
+> EVENT_SET W1S寄存器；置起bit0软件事件；直接写掩码，禁止RMW读改写
+7. `void clear_software_event(void)`
+
+> 
+> EVENT_CLR W1C寄存器；清除bit0软件事件；直接写掩码，禁止RMW读改写
+
+##思考题（不用写进代码，自己思考）
+Q1：开启packed之后，STAT16位于奇数地址0x05，直接读取`DEV_BASE->STAT16`会带来非对齐访问风险。**BSP工程层面如何规避这个硬件布局带来的非对齐访问？提示：放弃直接映射uint16_t，利用周边32位寄存器做字节访问。简述思路。**
+
+Q2：为什么脉冲只写位不能RMW读改写？
+
+Q3：W1S/W1C为什么禁止RMW读改写？
+
+Q4：是否任何BSP寄存器结构体都应该无脑加上`__attribute__((packed))`？阐述你的理解。
+
+> 
+> 提示掩码参考：
+
+1. W1S EVENT_SET bit0：掩码 `1U << 0`
+2. W1C EVENT_CLR bit0：掩码 `1U << 0`
+
+你的任务：手写完整C代码，写完粘贴过来，我帮你review找bug。

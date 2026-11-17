@@ -1,0 +1,41 @@
+### 问题分析 `dev_set_timeout`
+> bit4‑bit7，一共4位。掩码：`0x0FU << 4`。
+原来代码直接 `|=`，旧的4位不会清零，新val只会或上去，如果旧位为1，无法清成0。
+正确流程RMW：
+1.读出CFG
+2.把bit4~bit7这4位先清零，其他位保持不变
+3.把val左移4位，或进去
+4.写回CFG
+
+掩码构造：
+`uint32_t mask = ~(0x0FU << 4);`
+- `0x0FU <<4` ：bit4‑7置1，其余0
+- `~(0x0FU <<4)`：bit4‑7变为0，剩下所有位全部1；与`tempVal`做`&=`，就把这4位清零。
+
+修改后函数片段：
+```c
+void dev_set_timeout(uint8_t val)
+{
+    uint32_t tempVal = DevReg->CFG;
+    uint32_t mask = ~(0x0FU << 4);
+    tempVal &= mask;          //清空bit4~7旧值
+    tempVal |= ((uint32_t)val << 4);
+    DevReg->CFG = tempVal;
+}
+```
+
+---
+### 顺带修复宏的编码习惯（非必现bug，工程最佳实践）
+```c
+#define DevReg ((RegInfo *)(0x42004000))
+```
+> 给立即数地址加上括号，防止宏展开优先级问题。
+
+---
+### 那个思考题理解：
+> EVENT是W0C寄存器。**禁止RMW读‑改‑写：temp=EVENT; temp &= ~(1u<<2); EVENT=temp;**
+> RMW会把从硬件读到的EVENT其它位原样写回去。假设EVENT其它位也是W0C类型：读到某一位是0，再写回0，就会意外清除别的事件标志！
+> W0C/W1C这类写才有动作寄存器，**不要RMW，直接写固定掩码值，不要把读出来的值写回去**。
+> 所以`dev_clear_event`直接赋值`DevReg->EVENT = ~(1u << 2);`，不能先读EVENT。
+
+改完整份代码之后，贴给我整体再看一遍。
