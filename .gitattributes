@@ -1,0 +1,20 @@
+# 统一换行：代码在 WSL / Linux 里编译，CRLF 会让 Makefile 和 shell 脚本报奇怪的错
+* text=auto eol=lf
+*.c   text eol=lf
+*.h   text eol=lf
+*.cpp text eol=lf
+*.hpp text eol=lf
+*.sh  text eol=lf
+*.py  text eol=lf
+*.mk  text eol=lf
+*.patch text eol=lf
+Makefile text eol=lf
+makefile text eol=lf
+*.md  text eol=lf
+*.html text eol=lf
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
