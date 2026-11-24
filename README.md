@@ -24,6 +24,7 @@
 - `CTest/` — C 语言：指针、结构体指针、内存对齐、条件编译、多行宏、`__attribute__`、`offsetof`、可变参数函数、综合测试
 - `fileio/` — Linux 文件 IO：`open` / `write` / `read`，含中途写入与覆写
 - `MakeFileTest/` — Makefile：变量、自动依赖生成、多目录多文件工程
+- `inputProc/` — Linux input 子系统：`EVIOCGID` / `EVIOCGBIT` 取设备信息与能力位图、阻塞读、`select`、`poll`、`SIGIO` + `FASYNC` 异步通知
 
 编译产物（`*.o`、`*.d`、无扩展名的可执行文件）已由 `.gitignore` 排除，只在本地磁盘保留。
 

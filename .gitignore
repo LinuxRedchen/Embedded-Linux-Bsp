@@ -24,6 +24,11 @@ practice/fileio/**/open
 practice/fileio/**/write
 practice/fileio/**/read
 practice/fileio/**/insert
+practice/inputProc/**/keyProc
+practice/inputProc/**/block_input
+practice/inputProc/**/select_input
+practice/inputProc/**/poll_input
+practice/inputProc/**/asyn_input
 
 # ===== 程序运行时生成的数据文件 =====
 practice/fileio/**/123123
